@@ -1,6 +1,7 @@
-// src/pages/NouvelleVentes.jsx
 import React, { useState, useEffect } from 'react';
 import { PlusIcon, TrashIcon, ShoppingCartIcon, CheckCircleIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import Skeleton from 'react-loading-skeleton'; // Importe Skeleton
+import 'react-loading-skeleton/dist/skeleton.css'; // N'oublie pas d'importer le CSS
 
 export default function NouvelleVente() {
   const [clients, setClients] = useState([]);
@@ -14,6 +15,13 @@ export default function NouvelleVente() {
     montant_paye: 0
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ✅ LOGIQUE CORRIGÉE POUR GÉRER LOCAL ET PRODUCTION
+  const backendUrl = import.meta.env.PROD
+    ?   'fresh-backned-production.up.railway.app'
+
+
+    : 'http://localhost:3001';
 
   // Helper function to format currency
   const formatCFA = (amount) => {
@@ -32,7 +40,7 @@ export default function NouvelleVente() {
     setLoading(true);
     setStatusMessage({ type: '', text: '' });
     try {
-      const clientsRes = await fetch('http://localhost:3001/api/clients');
+      const clientsRes = await fetch(`${backendUrl}/api/clients`); // URL mise à jour
       if (!clientsRes.ok) {
         const errorData = await clientsRes.json();
         throw new Error(errorData.error || 'Échec de la récupération des clients.');
@@ -40,7 +48,7 @@ export default function NouvelleVente() {
       const clientsData = await clientsRes.json();
       setClients(clientsData);
 
-      const productsRes = await fetch('http://localhost:3001/api/products');
+      const productsRes = await fetch(`${backendUrl}/api/products`); // URL mise à jour
       if (!productsRes.ok) {
         const errorData = await productsRes.json();
         throw new Error(errorData.error || 'Échec de la récupération des produits.');
@@ -185,7 +193,7 @@ export default function NouvelleVente() {
     }
 
     try {
-      const res = await fetch('http://localhost:3001/api/ventes', {
+      const res = await fetch(`${backendUrl}/api/ventes`, { // URL mise à jour
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -221,7 +229,58 @@ export default function NouvelleVente() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-600">Chargement des données...</div>;
+    return (
+      <div className="p-8 max-w-4xl mx-auto font-sans bg-gray-50 rounded-3xl shadow-xl border border-gray-100">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center">
+          <ShoppingCartIcon className="h-7 w-7 text-blue-600 mr-2" />
+          Nouvelle Vente
+        </h2>
+        {/* Skeleton pour les champs client et téléphone */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <Skeleton height={20} width="80%" className="mb-2" /> {/* Label */}
+            <Skeleton height={48} /> {/* Input */}
+          </div>
+          <div>
+            <Skeleton height={20} width="70%" className="mb-2" /> {/* Label */}
+            <Skeleton height={48} /> {/* Input */}
+          </div>
+        </div>
+        {/* Skeleton pour le montant payé */}
+        <div className="mb-6">
+          <Skeleton height={20} width="60%" className="mb-2" /> {/* Label */}
+          <Skeleton height={48} /> {/* Input */}
+        </div>
+
+        {/* Skeleton pour la section "Articles à vendre" */}
+        <div className="space-y-5 p-5 rounded-2xl bg-gray-50 border border-gray-200 shadow-inner">
+          <Skeleton height={25} width="50%" className="mb-4" /> {/* Titre */}
+          {Array(2).fill(0).map((_, index) => ( // Afficher 2 skeletons d'articles
+            <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
+              <div>
+                <Skeleton height={15} width="40%" className="mb-1" /> {/* Label IMEI */}
+                <Skeleton height={40} /> {/* Input IMEI */}
+                <Skeleton count={2} height={15} width="90%" className="mt-1" /> {/* Infos produit et prix */}
+              </div>
+              <div className="flex justify-end items-center h-full pt-6 md:pt-0">
+                <Skeleton circle height={30} width={30} /> {/* Bouton supprimer */}
+              </div>
+            </div>
+          ))}
+          <Skeleton height={40} width={150} className="mt-4" /> {/* Bouton "Ajouter un article" */}
+        </div>
+
+        {/* Skeleton pour le montant total */}
+        <div className="text-right pt-4 border-t border-gray-200">
+          <Skeleton height={30} width="70%" className="ml-auto" />
+        </div>
+
+        {/* Skeleton pour le bouton de soumission */}
+        <div className="flex justify-center pt-4">
+          <Skeleton height={60} width={200} />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -356,6 +415,7 @@ export default function NouvelleVente() {
               </div>
             );
           })}
+          {/* Le bouton pour ajouter un article (actuellement commenté dans ton code original) */}
           {/* <button
             type="button"
             onClick={handleAddItem}

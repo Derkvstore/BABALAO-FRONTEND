@@ -1,62 +1,84 @@
-// Login.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
+    setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:3001/api/login', {
+      const BACKEND_URL = import.meta.env.VITE_API_URL;
+
+      const res = await fetch(`${BACKEND_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await res.json(); // Récupérez les données de la réponse JSON
-
-      if (res.ok) {
-        localStorage.setItem('token', data.token);
-        // STOCKER ICI LE NOM COMPLET ET LE NOM D'UTILISATEUR
-        localStorage.setItem('fullName', data.fullName); // data.fullName vient du backend
-        localStorage.setItem('username', data.username); // data.username vient du backend (fallback si fullName est vide)
-        navigate('/dashboard');
-      } else {
-        setMessage(`❌ ${data.error || data.message || 'Erreur inconnue'}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          setMessage('❌ Erreur: L\'API de connexion est introuvable.');
+        } else if (res.status === 401) {
+          const errorData = await res.json();
+          setMessage(`❌ ${errorData.message}`);
+        } else {
+          setMessage(`❌ Erreur ${res.status}: ${res.statusText}`);
+        }
+        return;
       }
+
+      const data = await res.json();
+
+      // Correction : vider le localStorage avant de stocker le nouveau token
+      localStorage.clear();
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('fullName', data.fullName);
+      localStorage.setItem('username', data.username);
+      navigate('/dashboard');
     } catch (err) {
       console.error('Erreur lors de la connexion frontend :', err);
-      setMessage('❌ Erreur serveur');
+      setMessage(`❌ Erreur serveur: Impossible de se connecter à l'API. Vérifiez l'URL du backend.`);
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4">
-      <div className="bg-white border border-blue-500/20 shadow-lg p-10 max-w-md w-full rounded-2xl">
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
-        <div className="flex justify-center mb-4">
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+      <div className="bg-white border border-blue-500/20 shadow-lg p-6 w-full max-w-xs sm:max-w-sm rounded-2xl">
+        <div className="flex justify-center mb-6">
           <img
-            //src="/logo.png"
-           // alt="Logo Derkv"
+            src="/logo.png"
+            alt="Logo Niangadou ELECTRO"
             className="w-20 h-20 rounded-full object-cover shadow"
           />
         </div>
 
         <h2 className="text-center text-2xl font-light text-blue-700 mb-6">
-          Connexion 
+          DAFF TELECOM
         </h2>
 
         {message && (
           <div className="mb-4 text-sm text-blue-600 text-center">{message}</div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700">
               Nom d’utilisateur
@@ -66,7 +88,8 @@ export default function Login() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={loading}
             />
           </div>
 
@@ -74,20 +97,37 @@ export default function Login() {
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Mot de passe
             </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="relative mt-1">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-blue-600 focus:outline-none"
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-full hover:bg-blue-700 transition"
+            disabled={loading}
+            className={`w-full flex justify-center items-center gap-2 bg-blue-600 text-white py-2 rounded-full transition hover:bg-blue-700 ${
+              loading ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
           >
-            Se connecter
+            {loading && (
+              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            )}
+            {loading ? 'Connexion en cours...' : 'Se connecter'}
           </button>
         </form>
       </div>

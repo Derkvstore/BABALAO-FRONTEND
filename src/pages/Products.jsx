@@ -10,6 +10,8 @@ import {
   XCircleIcon,
   PrinterIcon
 } from '@heroicons/react/24/outline';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 // Listes pour autocomplétion
 const MARQUES = ["iPhone", "Samsung", "iPad", "AirPod"];
@@ -29,10 +31,10 @@ const MODELES = {
 const STOCKAGES = ["64 Go", "128 Go", "256 Go", "512 Go", "1 To"];
 
 
-export default function App() { // Renamed to App for direct rendering in Canvas
+export default function App() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState(''); // Renamed from 'search' to 'searchTerm' for consistency
+  const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
@@ -69,23 +71,30 @@ export default function App() { // Renamed to App for direct rendering in Canvas
     setOnConfirmAction(null);
   };
 
-  // Fonction pour formater les nombres avec des espaces comme séparateurs de milliers
+  const backendUrl = import.meta.env.PROD
+    ? 'fresh-backned-production.up.railway.app'
+
+    : 'http://localhost:3001';
+
   const formatNumber = (amount) => {
-    if (amount === null || amount === undefined || isNaN(amount)) {
-      return 'N/A';
+    if (amount === null || amount === undefined || isNaN(amount) || amount === "") {
+      return '0 CFA';
     }
-    // Utilise toLocaleString pour formater avec des espaces et sans décimales
-    return parseFloat(amount).toLocaleString('fr-FR', {
+    const numericAmount = parseFloat(amount);
+    if (numericAmount === 0) {
+      return '0 CFA';
+    }
+    return numericAmount.toLocaleString('fr-FR', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    });
+    }) + ' CFA';
   };
 
   const fetchProducts = () => {
     setLoading(true);
     setFormError("");
     setSuccessMessage("");
-    fetch("http://localhost:3001/api/products")
+    fetch(`${backendUrl}/api/products`)
       .then((res) => {
         if (!res.ok) {
           throw new Error("Erreur réseau lors de la récupération des produits.");
@@ -93,7 +102,6 @@ export default function App() { // Renamed to App for direct rendering in Canvas
         return res.json();
       })
       .then((data) => {
-        console.log("Produits reçus du backend (fetchProducts):", data); // LOG IMPORTANT
         setProducts(data);
       })
       .catch((error) => {
@@ -106,7 +114,7 @@ export default function App() { // Renamed to App for direct rendering in Canvas
   };
 
   const fetchFournisseurs = () => {
-    fetch("http://localhost:3001/api/fournisseurs")
+    fetch(`${backendUrl}/api/fournisseurs`)
       .then((res) => {
         if (!res.ok) {
           return res.json().then(err => { throw new Error(err.error || "Erreur réseau inconnue lors de la récupération des fournisseurs."); });
@@ -131,14 +139,13 @@ export default function App() { // Renamed to App for direct rendering in Canvas
     const { name, value } = e.target;
     let newValue = value;
 
-    // Pour les champs numériques (prix et quantité), filtrez les caractères non numériques
     if (name === "prix_achat" || name === "prix_vente") {
-        newValue = value.replace(/[^0-9]/g, ''); // N'autorise que les chiffres (pas de point pour les décimales)
+        newValue = value.replace(/[^0-9]/g, '');
     } else if (name === "quantite" && editingId) {
-        newValue = value.replace(/[^0-9]/g, ''); // N'autorise que les chiffres
+        newValue = value.replace(/[^0-9]/g, '');
     } else if (name === "imei") {
         if (editingId) {
-            newValue = value.replace(/[^0-9]/g, '').slice(0, 6); // Max 6 chiffres
+            newValue = value.replace(/[^0-9]/g, '').slice(0, 6);
         }
     }
 
@@ -153,13 +160,12 @@ export default function App() { // Renamed to App for direct rendering in Canvas
     setSuccessMessage("");
     setIsSubmitting(true);
 
-    if (!form.marque || !form.modele || !form.type || !form.prix_vente || !form.prix_achat || !form.fournisseur_id) {
-      setFormError("Veuillez remplir tous les champs obligatoires (Marque, Modèle, Type, Prix de vente, Prix d'achat, Fournisseur).");
+    if (!form.marque || !form.modele || !form.stockage || !form.type || !form.prix_vente || !form.prix_achat || !form.fournisseur_id) {
+      setFormError("Veuillez remplir tous les champs obligatoires.");
       setIsSubmitting(false);
       return;
     }
     
-    // Conversion en nombres entiers pour les prix
     const parsedPrixVente = parseInt(form.prix_vente, 10);
     if (isNaN(parsedPrixVente) || parsedPrixVente <= 0) {
       setFormError("Le prix de vente doit être un nombre entier positif.");
@@ -174,7 +180,6 @@ export default function App() { // Renamed to App for direct rendering in Canvas
       return;
     }
 
-    // NOUVELLE CONDITION : Le prix de vente ne peut pas être inférieur au prix d'achat
     if (parsedPrixVente <= parsedPrixAchat) {
       setFormError("Le prix de vente ne peut pas être inférieur ou égale au prix d'achat.");
       setIsSubmitting(false);
@@ -202,6 +207,12 @@ export default function App() { // Renamed to App for direct rendering in Canvas
       setIsSubmitting(false);
       return;
     }
+    if (form.type === "ARRIVAGE" && form.marque.toLowerCase() === "iphone" && !form.type_carton) {
+      setFormError("La qualité d'arrivage (SM/MSG) est requise pour les iPhones en arrivage.");
+      setIsSubmitting(false);
+      return;
+    }
+
 
     let dataToSend = {
       ...form,
@@ -219,7 +230,7 @@ export default function App() { // Renamed to App for direct rendering in Canvas
         return;
       }
       dataToSend.quantite = parsedQuantite;
-      url = `http://localhost:3001/api/products/${editingId}`;
+      url = `${backendUrl}/api/products/${editingId}`;
       method = "PUT";
     } else {
       const imeiInput = form.imei;
@@ -242,7 +253,6 @@ export default function App() { // Renamed to App for direct rendering in Canvas
         }
       }
 
-      // NOUVEAU : Vérifier les doublons au sein de la liste d'IMEI saisie
       const uniqueImeis = new Set(imeiList);
       if (uniqueImeis.size !== imeiList.length) {
         setFormError("La liste des IMEI contient des doublons. Veuillez entrer des IMEI uniques.");
@@ -250,23 +260,20 @@ export default function App() { // Renamed to App for direct rendering in Canvas
         return;
       }
 
-      // NOUVEAU : Vérifier l'unicité par rapport aux produits existants dans l'état local
       for (const newImei of imeiList) {
         const isDuplicateInExistingProducts = products.some(p => {
-          // Vérification des champs principaux pour l'unicité
           let match = p.marque === form.marque &&
                       p.modele === form.modele &&
                       p.stockage === form.stockage &&
                       p.type === form.type &&
                       p.imei === newImei;
 
-          // Vérification conditionnelle de type_carton
           if (form.marque.toLowerCase() === "iphone" && form.type === "CARTON") {
-            // Si le nouveau produit est un iPhone CARTON, type_carton doit correspondre
             match = match && p.type_carton === form.type_carton;
-          } else {
-            // Si le nouveau produit n'est PAS un iPhone CARTON, alors p.type_carton doit également être vide/null pour une correspondance
-            // Cela gère les cas comme ARRIVAGE où type_carton n'est pas applicable.
+          } else if (form.marque.toLowerCase() === "iphone" && form.type === "ARRIVAGE") {
+            match = match && p.type_carton === form.type_carton;
+          }
+          else {
             match = match && (!p.type_carton || p.type_carton === "");
           }
           return match;
@@ -278,7 +285,6 @@ export default function App() { // Renamed to App for direct rendering in Canvas
           return;
         }
       }
-      // FIN NOUVEAU
 
       dataToSend = {
         ...form,
@@ -288,12 +294,9 @@ export default function App() { // Renamed to App for direct rendering in Canvas
         fournisseur_id: parseInt(form.fournisseur_id, 10),
       };
       delete dataToSend.quantite;
-      url = "http://localhost:3001/api/products/batch";
+      url = `${backendUrl}/api/products/batch`;
       method = "POST";
     }
-
-    // Log du payload avant l'envoi
-    console.log("Données envoyées au backend:", dataToSend);
 
     try {
       const res = await fetch(url, {
@@ -303,11 +306,10 @@ export default function App() { // Renamed to App for direct rendering in Canvas
       });
 
       const responseData = await res.json();
-      console.log("Réponse du backend après soumission:", responseData); // LOG IMPORTANT
 
       if (res.ok) {
         setSuccessMessage(editingId ? "Produit modifié avec succès !" : "Produits ajoutés avec succès !");
-        fetchProducts(); // Re-fetch all products after successful operation
+        fetchProducts();
         resetForm();
         setShowForm(false);
       } else {
@@ -315,11 +317,11 @@ export default function App() { // Renamed to App for direct rendering in Canvas
 
         if (responseData.failedProducts && responseData.failedProducts.length > 0) {
           const failedList = responseData.failedProducts.map(
-            (fp) => `- IMEI ${fp.imei} : ${fp.error}`
+            (fp) => `- IMEI ${fp.imei} : ${fp.imei_error || fp.error}`
           ).join('\n');
           errorMessage += `\n\nDétails des échecs :\n${failedList}`;
         } else if (responseData.constraint === "products_marque_modele_stockage_type_type_carton_imei_key") {
-            errorMessage = "Cette combinaison de produit (Marque, Modèle, Stockage, Type, Qualité Carton, IMEI) existe déjà. Chaque produit doit être unique selon ces critères.";
+            errorMessage = "Cette combinaison de produit (Marque, Modèle, Stockage, Type, Qualité Carton, IMEI) existe déjà.";
         }
         setFormError(errorMessage);
       }
@@ -337,7 +339,7 @@ export default function App() { // Renamed to App for direct rendering in Canvas
       "Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible et ne peut être effectuée que si le produit n'est lié à aucune vente.",
       async () => {
         try {
-          const res = await fetch(`http://localhost:3001/api/products/${id}`, {
+          const res = await fetch(`${backendUrl}/api/products/${id}`, {
             method: "DELETE",
           });
           if (res.ok) {
@@ -358,7 +360,6 @@ export default function App() { // Renamed to App for direct rendering in Canvas
   };
 
   const handleEdit = (p) => {
-    console.log("Produit sélectionné pour édition (handleEdit):", p); // LOG IMPORTANT
     setForm({
       marque: p.marque,
       modele: p.modele,
@@ -367,7 +368,6 @@ export default function App() { // Renamed to App for direct rendering in Canvas
       type_carton: p.type_carton || "",
       imei: p.imei,
       quantite: p.quantite || 1,
-      // Formatage pour l'édition : sans décimales si elles sont .00, sinon les afficher
       prix_vente: p.prix_vente !== undefined && p.prix_vente !== null ? parseFloat(p.prix_vente).toFixed(0) : "",
       prix_achat: p.prix_achat !== undefined && p.prix_achat !== null ? parseFloat(p.prix_achat).toFixed(0) : "",
       fournisseur_id: p.fournisseur_id || "",
@@ -399,59 +399,77 @@ export default function App() { // Renamed to App for direct rendering in Canvas
   const modelesDispo = form.marque ? MODELES[form.marque] || [] : [];
 
   const filteredProducts = products.filter((p) => {
-    // Assure que p.fournisseur_id est un nombre pour la comparaison
     const fournisseurNom = fournisseurs.find(f => f.id === parseInt(p.fournisseur_id, 10))?.nom || p.nom_fournisseur || "Non défini";
-
-    const text = `${p.marque} ${p.modele} ${p.stockage} ${p.type} ${p.type_carton ||
-      ""} ${p.imei} ${p.prix_vente || ""} ${fournisseurNom || ""}`.toLowerCase();
-
-    const matchesSearch = searchTerm.toLowerCase().split(' ').every(term => text.includes(term)); // Using searchTerm
-    const isActive = p.status === 'active'; // Le filtre clé
-
+    const text = `${p.marque} ${p.modele} ${p.stockage} ${p.type} ${p.type_carton || ""} ${p.imei} ${p.prix_vente || ""} ${fournisseurNom || ""}`.toLowerCase();
+    const matchesSearch = searchTerm.toLowerCase().split(' ').every(term => text.includes(term));
+    const isActive = p.status === 'active';
     return isActive && matchesSearch;
   });
 
   return (
-    <div className="p-8 max-w-5xl mx-auto font-sans">
-      <h1 className="text-3xl font-semibold text-blue-700 mb-6 flex items-center">
-        <CubeIcon className="h-8 w-8 text-blue-600 mr-2" />
+    <div className="p-4 sm:p-8 max-w-full mx-auto font-sans">
+       <style>
+        {`
+        /* Styles pour l'animation de chargement du bouton (style Apple) */
+        @keyframes loading-dot {
+          0%, 80%, 100% { transform: scale(0); }
+          40% { transform: scale(1); }
+        }
+        .loading-dot {
+          animation: loading-dot 1.4s infinite ease-in-out both;
+          width: 8px;
+          height: 8px;
+          background-color: white;
+          border-radius: 50%;
+          display: inline-block;
+          margin: 0 2px;
+        }
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        `}
+      </style>
+      <h1 className="text-2xl sm:text-3xl font-semibold text-blue-700 mb-6 flex items-center">
+        <CubeIcon className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600 mr-2" />
         Gestion des produits
       </h1>
 
-      <div className="flex items-center space-x-3 mb-4 max-w-md">
-        <MagnifyingGlassIcon className="w-5 h-5 text-gray-500" />
-        <input
-          type="text"
-          placeholder="Rechercher (marque, modèle, IMEI, fournisseur...)"
-          value={searchTerm} // Using searchTerm
-          onChange={(e) => setSearchTerm(e.target.value)} // Using setSearchTerm
-          className="border border-blue-300 rounded-full px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
-        />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 mb-6">
+        <div className="relative w-full sm:max-w-md">
+          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <MagnifyingGlassIcon className="w-5 h-5 text-gray-500" />
+          </span>
+          <input
+            type="text"
+            placeholder="Rechercher (marque, modèle, IMEI, fournisseur...)"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full border border-blue-300 rounded-full px-4 py-2 pl-10 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+          />
+        </div>
+        <button
+          onClick={() => {
+            setShowForm(true);
+            resetForm();
+          }}
+          className="flex-shrink-0 flex items-center px-5 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition"
+        >
+          <PlusIcon className="h-5 w-5 mr-2" />
+          Ajouter un produit
+        </button>
       </div>
 
-      <button
-        onClick={() => {
-          setShowForm(true);
-          resetForm();
-        }}
-        className="mb-6 flex items-center px-5 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition"
-      >
-        <PlusIcon className="h-5 w-5 mr-2" />
-        Ajouter un produit
-      </button>
-
       {successMessage && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 flex items-center justify-between" role="alert">
-          <span className="block sm:inline">{successMessage}</span>
-          <button onClick={() => setSuccessMessage("")} className="ml-4 text-green-700 hover:text-green-900">
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 flex items-start justify-between" role="alert">
+          <span className="block sm:inline mr-2">{successMessage}</span>
+          <button onClick={() => setSuccessMessage("")} className="text-green-700 hover:text-green-900 flex-shrink-0">
             <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
       )}
       {formError && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 flex items-center justify-between" role="alert">
-          <span className="block sm:inline">{formError}</span>
-          <button onClick={() => setFormError("")} className="ml-4 text-red-700 hover:text-red-900">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 flex items-start justify-between whitespace-pre-wrap" role="alert">
+          <span className="block sm:inline mr-2">{formError}</span>
+          <button onClick={() => setFormError("")} className="text-red-700 hover:text-red-900 flex-shrink-0">
             <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
@@ -463,7 +481,7 @@ export default function App() { // Renamed to App for direct rendering in Canvas
           className="bg-white p-6 rounded-2xl shadow-lg max-w-2xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 border border-blue-200 mb-8"
           autoComplete="off"
         >
-          <h2 className="text-2xl font-semibold text-blue-700 mb-4 text-center col-span-full">
+          <h2 className="text-xl sm:text-2xl font-semibold text-blue-700 mb-4 text-center col-span-full">
             {editingId ? "Modifier un produit" : "Nouveau produit"}
           </h2>
 
@@ -571,10 +589,30 @@ export default function App() { // Renamed to App for direct rendering in Canvas
                 className="w-full border border-blue-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
               >
                 <option value="">Choisir la qualité</option>
-                <option value="GW">GW</option>
                 <option value="ORG">ORG</option>
+                <option value="GW">GW</option>
                 <option value="ACTIVE">ACTIVE</option>
                 <option value="NO ACTIVE">NO ACTIVE</option>
+              </select>
+            </div>
+          )}
+
+          {form.marque.toLowerCase() === "iphone" && form.type === "ARRIVAGE" && (
+            <div className="col-span-full">
+              <label htmlFor="type_carton" className="block text-sm font-medium text-gray-700 mb-1">
+                Qualité Arrivage *
+              </label>
+              <select
+                id="type_carton"
+                name="type_carton"
+                value={form.type_carton}
+                onChange={handleChange}
+                required
+                className="w-full border border-blue-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+              >
+                <option value="">Choisir la qualité</option>
+                <option value="SM">SM</option>
+                <option value="MSG">MSG</option>
               </select>
             </div>
           )}
@@ -585,6 +623,7 @@ export default function App() { // Renamed to App for direct rendering in Canvas
             </label>
             <input
               type="text"
+              inputMode="numeric"
               id="prix_achat"
               name="prix_achat"
               placeholder="Entrer le prix d'achat (ex: 20000)"
@@ -593,6 +632,9 @@ export default function App() { // Renamed to App for direct rendering in Canvas
               required
               className="w-full border border-blue-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              <span className="font-semibold">Formaté :</span> {formatNumber(form.prix_achat)}
+            </p>
           </div>
 
           <div>
@@ -601,6 +643,7 @@ export default function App() { // Renamed to App for direct rendering in Canvas
             </label>
             <input
               type="text"
+              inputMode="numeric"
               id="prix_vente"
               name="prix_vente"
               placeholder="Entrer le prix de vente (ex: 25000)"
@@ -609,6 +652,9 @@ export default function App() { // Renamed to App for direct rendering in Canvas
               required
               className="w-full border border-blue-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              <span className="font-semibold">Formaté :</span> {formatNumber(form.prix_vente)}
+            </p>
           </div>
 
           <div>
@@ -639,6 +685,7 @@ export default function App() { // Renamed to App for direct rendering in Canvas
             {editingId ? (
               <input
                 type="text"
+                inputMode="numeric"
                 id="imei"
                 name="imei"
                 placeholder="Entrez l'IMEI (6 chiffres)"
@@ -669,6 +716,7 @@ export default function App() { // Renamed to App for direct rendering in Canvas
               </label>
               <input
                 type="text"
+                inputMode="numeric"
                 id="quantite"
                 name="quantite"
                 placeholder="Quantité"
@@ -680,15 +728,21 @@ export default function App() { // Renamed to App for direct rendering in Canvas
             </div>
           )}
 
-          <div className="flex justify-center gap-4 mt-4 col-span-full">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4 col-span-full">
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`rounded-full px-8 py-3 font-semibold transition ${
-                isSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"
+              className={`rounded-full px-8 py-3 font-semibold transition flex items-center justify-center
+                ${isSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
             >
-              {isSubmitting ? "Enregistrement..." : (editingId ? "Modifier le produit" : "Ajouter les produits")}
+              {isSubmitting ? (
+                  <>
+                    <span className="loading-dot"></span>
+                    <span className="loading-dot"></span>
+                    <span className="loading-dot"></span>
+                  </>
+                ) : (editingId ? "Modifier le produit" : "Ajouter les produits")}
             </button>
             <button
               type="button"
@@ -705,25 +759,57 @@ export default function App() { // Renamed to App for direct rendering in Canvas
       )}
 
       {loading ? (
-        <p className="text-gray-500">Chargement...</p>
+        <div className="p-4 bg-white rounded-xl shadow">
+          <Skeleton height={40} className="mb-4" />
+          <div className="overflow-x-auto">
+            <table className="min-w-[1200px] w-full text-sm">
+              <thead>
+                <tr>
+                  <th className="px-6 py-3"><Skeleton /></th>
+                  <th className="px-6 py-3"><Skeleton /></th>
+                  <th className="px-6 py-3"><Skeleton /></th>
+                  <th className="px-6 py-3"><Skeleton /></th>
+                  <th className="px-6 py-3"><Skeleton /></th>
+                  <th className="px-6 py-3"><Skeleton /></th>
+                  <th className="px-6 py-3"><Skeleton /></th>
+                  <th className="px-6 py-3"><Skeleton /></th>
+                  <th className="px-6 py-3"><Skeleton /></th>
+                  <th className="px-6 py-3"><Skeleton /></th>
+                  <th className="px-6 py-3"><Skeleton /></th>
+                  <th className="px-6 py-3"><Skeleton /></th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array(5).fill(0).map((_, i) => (
+                  <tr key={i}>
+                    {Array(12).fill(0).map((_, j) => (
+                      <td key={j} className="px-6 py-4"><Skeleton /></td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       ) : filteredProducts.length === 0 ? (
-        <p className="text-gray-500">Aucun produit trouvé.</p>
+        <p className="text-gray-500 text-center mt-8">Aucun produit trouvé.</p>
       ) : (
         <div className="bg-white shadow-md rounded-xl overflow-x-auto">
-          <table className="min-w-[1200px] divide-y divide-gray-200 text-sm">
+          <table className="min-w-[1200px] divide-y divide-gray-200 text-sm w-full">
             <thead className="bg-gray-50 text-gray-700 text-left">
               <tr>
-                <th className="px-6 py-3">Marque</th>
-                <th className="px-6 py-3">Modèle</th>
-                <th className="px-6 py-3">Stockage</th>
-                <th className="px-6 py-3">Type</th>
-                <th className="px-6 py-3">IMEI</th>
-                <th className="px-6 py-3">Quantité</th>
-                <th className="px-6 py-3">Prix Achat</th>
-                <th className="px-6 py-3">Prix de vente</th>
-                <th className="px-6 py-3 whitespace-nowrap">Fournisseur</th>
-                <th className="px-6 py-3">Date d'arrivée</th>
-                <th className="px-6 py-3 text-right whitespace-nowrap">Actions</th>
+                <th className="px-4 sm:px-6 py-3">Marque</th>
+                <th className="px-4 sm:px-6 py-3">Modèle</th>
+                <th className="px-4 sm:px-6 py-3">Stockage</th>
+                <th className="px-4 sm:px-6 py-3">Type</th>
+                <th className="px-4 sm:px-6 py-3">Qualité</th>
+                <th className="px-4 sm:px-6 py-3">IMEI</th>
+                <th className="px-4 sm:px-6 py-3">Quantité</th>
+                <th className="px-4 sm:px-6 py-3 text-right">Prix Achat</th>
+                <th className="px-4 sm:px-6 py-3 text-right">Prix de vente</th>
+                <th className="px-4 sm:px-6 py-3 whitespace-nowrap">Fournisseur</th>
+                <th className="px-4 sm:px-6 py-3">Date d'arrivée</th>
+                <th className="px-4 sm:px-6 py-3 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
 
@@ -733,32 +819,34 @@ export default function App() { // Renamed to App for direct rendering in Canvas
                   key={p.id}
                   className="hover:bg-gray-50 transition"
                 >
-                  <td className="px-6 py-4 font-medium text-gray-900">{p.marque}</td>
-                  <td className="px-6 py-4 text-gray-700">{p.modele}</td>
-                  <td className="px-6 py-4 text-gray-700">{p.stockage}</td>
-                  <td className="px-6 py-4 text-gray-700">
+                  <td className="px-4 sm:px-6 py-4 font-medium text-gray-900">{p.marque}</td>
+                  <td className="px-4 sm:px-6 py-4 text-gray-700">{p.modele}</td>
+                  <td className="px-4 sm:px-6 py-4 text-gray-700">{p.stockage}</td>
+                  <td className="px-4 sm:px-6 py-4 text-gray-700">
                     {p.type}
-                    {p.type === "CARTON" && p.type_carton ? ` (${p.type_carton})` : ""}
                   </td>
-                  <td className="px-6 py-4 text-gray-700">{p.imei}</td>
-                  <td className="px-6 py-4 text-gray-700">{p.quantite}</td>
-                  <td className="px-6 py-4 text-gray-700">
+                  <td className="px-4 sm:px-6 py-4 text-gray-700">
+                    {p.type_carton || "N/A"}
+                  </td>
+                  <td className="px-4 sm:px-6 py-4 text-gray-700">{p.imei}</td>
+                  <td className="px-4 sm:px-6 py-4 text-gray-700">{p.quantite}</td>
+                  <td className="px-4 sm:px-6 py-4 text-gray-700 text-right whitespace-nowrap">
                     {formatNumber(p.prix_achat)}
                   </td>
-                  <td className="px-6 py-4 text-gray-700">
+                  <td className="px-4 sm:px-6 py-4 text-gray-700 text-right whitespace-nowrap">
                     {formatNumber(p.prix_vente)}
                   </td>
-                  <td className="px-6 py-4 text-gray-700 whitespace-nowrap">
+                  <td className="px-4 sm:px-6 py-4 text-gray-700 whitespace-nowrap">
                     {fournisseurs.find(f => f.id === parseInt(p.fournisseur_id, 10))?.nom || p.nom_fournisseur || "Non défini"}
                   </td>
-                  <td className="px-6 py-4 text-gray-700">
+                  <td className="px-4 sm:px-6 py-4 text-gray-700 whitespace-nowrap">
                     {p.date_ajout
                       ? new Date(p.date_ajout).toLocaleDateString('fr-FR', {
-                          year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' // ✅ MODIFIÉ : Ajout de l'heure et des minutes
+                          year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
                         })
                       : "N/A"}
                   </td>
-                  <td className="px-6 py-4 text-right space-x-2">
+                  <td className="px-4 sm:px-6 py-4 text-right space-x-2">
                     <button
                       onClick={() => handleEdit(p)}
                       className="text-blue-600 hover:text-blue-800"
@@ -777,7 +865,6 @@ export default function App() { // Renamed to App for direct rendering in Canvas
                 </tr>
               ))}
             </tbody>
-
           </table>
         </div>
       )}
@@ -785,19 +872,19 @@ export default function App() { // Renamed to App for direct rendering in Canvas
       {/* Modale de confirmation personnalisée */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full m-4">
             <h3 className="text-lg font-bold text-gray-900 mb-4">{confirmModalContent.title}</h3>
             <p className="text-gray-700 mb-6">{confirmModalContent.message}</p>
-            <div className="flex justify-end space-x-4">
+            <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4">
               <button
                 onClick={closeConfirmModal}
-                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition"
+                className="w-full sm:w-auto px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition"
               >
                 Annuler
               </button>
               <button
                 onClick={onConfirmAction}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+                className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
               >
                 Confirmer
               </button>
