@@ -52,7 +52,7 @@ const sections = [
   { name: 'Rapport', icon: ChartBarIcon },
   { name: 'Clients', icon: UserGroupIcon },
   { name: 'Retour mobile', icon: ArrowLeftIcon },
-  { name: 'Liste Fournisseurs', icon: TruckIcon },
+  { name: 'Fournisseurs', icon: TruckIcon },
   { name: 'Rtrs Fournisseur', icon: ArrowsRightLeftIcon },
   { name: 'Achat', icon: ClipboardDocumentListIcon }
 ];
