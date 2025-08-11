@@ -30,7 +30,7 @@ export default function Fournisseurs() {
 
   // ✅ LOGIQUE CORRIGÉE POUR GÉRER LOCAL ET PRODUCTION
   const backendUrl = import.meta.env.PROD
-    ?'fresh-backned-production.up.railway.app'
+    ?'https://fresh-backned-production.up.railway.app'
 
     : 'http://localhost:3001';
 
