@@ -72,7 +72,7 @@ export default function App() {
   };
 
   const backendUrl = import.meta.env.PROD
-    ? 'fresh-backned-production.up.railway.app'
+    ? 'https://fresh-backned-production.up.railway.app'
 
     : 'http://localhost:3001';
 

@@ -36,8 +36,7 @@ export default function Sorties() {
   const textareaRef = useRef(null);
 
   const backendUrl = import.meta.env.PROD
-    ? 'fresh-backned-production.up.railway.app'
-
+    ? 'https://fresh-backned-production.up.railway.app'
     : 'http://localhost:3001';
 
   const openConfirmModal = (title, message, action) => {
