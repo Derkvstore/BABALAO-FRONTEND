@@ -127,7 +127,7 @@ export default function Dashboard() {
           return <SpecialOrders />;
         case 'Retour mobile':
           return <RetoursMobiles />;
-        case 'Liste Fournisseurs':
+        case 'Fournisseurs':
           return <Fournisseurs />;
         case 'Rtrs Fournisseur':
           return <RemplacementsFournisseur />;
