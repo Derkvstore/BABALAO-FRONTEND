@@ -2,11 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import {
   PlusIcon,
-  PencilIcon,
-  TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ExclamationCircleIcon,
   TruckIcon,
   ArchiveBoxIcon,
   PhoneIcon,
@@ -17,15 +14,11 @@ import {
   ClockIcon,
   XMarkIcon,
   ArrowPathIcon,
-  ClipboardDocumentListIcon,
   CurrencyDollarIcon,
   ArrowUturnLeftIcon,
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 
-// ----------------------------------------------------
-// ➡️ MODIFICATIONS: Ajout des listes pour l'autocomplétion
-// ----------------------------------------------------
 const MARQUES = ["iPhone", "Samsung", "iPad", "AirPod"];
 const MODELES = {
   iPhone: [
@@ -41,6 +34,19 @@ const MODELES = {
   AirPod: ["1ère Gen", "2ème Gen", "3ème Gen", "4ème Gen", "Pro 1ème Gen,", "2ème Gen",],
 };
 const STOCKAGES = ["64 Go", "128 Go", "256 Go", "512 Go", "1 To"];
+
+// ----------------------------------------------------
+// ➡️ MODIFICATIONS: Ajout des mappages pour les statuts
+// ----------------------------------------------------
+const STATUS_DISPLAY_MAP = {
+  'en_attente': 'EN COURS',
+  'commandé': 'COMMANDÉ',
+  'reçu': 'REÇU',
+  'vendu': 'VENDU',
+  'paiement_partiel': 'PARTIEL',
+  'annulé': 'ANNULÉ',
+  'remplacé': 'REMPLACÉ',
+};
 // ----------------------------------------------------
 
 export default function SpecialOrders() {
@@ -63,20 +69,12 @@ export default function SpecialOrders() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmModalContent, setConfirmModalContent] = useState({ title: "", message: null });
   const [onConfirmAction, setOnConfirmAction] = useState(null);
-  // ----------------------------------------------------
-  // ➡️ MODIFICATIONS: Ajout de la valeur par défaut pour la raison de retour
-  // ----------------------------------------------------
-  const [returnReasonInput, setReturnReasonInput] = useState('Problème defectueux du client');
-  // ----------------------------------------------------
+  const [returnReasonInput, setReturnReasonInput] = useState('');
   const [confirmModalError, setConfirmModalError] = useState('');
-  // ----------------------------------------------------
-  // ➡️ MODIFICATIONS: Ajout des états de chargement pour les boutons
-  // ----------------------------------------------------
   const [isConfirming, setIsConfirming] = useState(false);
   const [isLoadingPayment, setIsLoadingPayment] = useState(false);
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState({});
-  // ----------------------------------------------------
 
   const textareaRef = useRef(null);
 
@@ -99,11 +97,24 @@ export default function SpecialOrders() {
     ? 'https://fresh-backned-production.up.railway.app'
     : 'http://localhost:3001';
 
+  // ----------------------------------------------------
+  // ➡️ MODIFICATIONS: Ajout des fonctions de formatage
+  // ----------------------------------------------------
+  const formatNumberWithSpaces = (number) => {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  };
+
+  const parseNumberFromFormattedString = (str) => {
+    return str.replace(/\s/g, '');
+  };
+  // ----------------------------------------------------
+
   const formatCFA = (amount) => {
     if (amount === null || amount === undefined || isNaN(parseFloat(amount))) {
-      return 'N/A CFA';
+      return 'N/A FCFA';
     }
-    return parseFloat(amount).toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' CFA';
+    const formattedAmount = parseFloat(amount).toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    return formattedAmount.replace(/,/g, ' ') + ' FCFA';
   };
 
   const formatDate = (dateString) => {
@@ -228,9 +239,13 @@ export default function SpecialOrders() {
       type,
       type_carton: typeCarton || null,
       imei: imei || null,
-      prix_achat_fournisseur: parseFloat(prixAchatFournisseur),
-      prix_vente_client: parseFloat(prixVenteClient),
-      montant_paye: parseFloat(initialMontantPaye || 0)
+      // ----------------------------------------------------
+      // ➡️ MODIFICATIONS: Parsing des nombres formatés
+      // ----------------------------------------------------
+      prix_achat_fournisseur: parseFloat(parseNumberFromFormattedString(prixAchatFournisseur)),
+      prix_vente_client: parseFloat(parseNumberFromFormattedString(prixVenteClient)),
+      montant_paye: parseFloat(parseNumberFromFormattedString(initialMontantPaye || 0))
+      // ----------------------------------------------------
     };
 
     try {
@@ -257,11 +272,7 @@ export default function SpecialOrders() {
   const updateOrderStatus = async (orderId, newStatus, reason = null) => {
     setStatusMessage({ type: '', text: '' });
     setConfirmModalError('');
-    // ----------------------------------------------------
-    // ➡️ MODIFICATIONS: Gérer l'état de chargement par bouton
-    // ----------------------------------------------------
     setStatusUpdateLoading(prev => ({ ...prev, [orderId]: true }));
-    // ----------------------------------------------------
     try {
       const res = await axios.put(`${backendUrl}/api/special-orders/${orderId}/update-status`, {
         statut: newStatus,
@@ -274,18 +285,18 @@ export default function SpecialOrders() {
       console.error(`Error updating order status ${orderId}:`, err);
       setConfirmModalError(`Error updating status: ${err.response?.data?.error || err.message}`);
     } finally {
-      // ----------------------------------------------------
-      // ➡️ MODIFICATIONS: Gérer l'état de chargement par bouton
-      // ----------------------------------------------------
       setStatusUpdateLoading(prev => ({ ...prev, [orderId]: false }));
       setIsConfirming(false);
-      // ----------------------------------------------------
     }
   };
 
   const handleUpdatePaymentClick = (order) => {
     setCurrentOrderToEditPayment(order);
-    setNewMontantPaye(order.montant_paye);
+    // ----------------------------------------------------
+    // ➡️ MODIFICATIONS: Formatage des montants pour la saisie
+    // ----------------------------------------------------
+    setNewMontantPaye(formatNumberWithSpaces(order.montant_paye));
+    // ----------------------------------------------------
     setPaymentModalError('');
     setShowPaymentModal(true);
   };
@@ -300,7 +311,11 @@ export default function SpecialOrders() {
 
     const orderId = currentOrderToEditPayment.order_id;
     const prixVenteClient = parseFloat(currentOrderToEditPayment.prix_vente_client);
-    const parsedNewMontantPaye = parseFloat(newMontantPaye);
+    // ----------------------------------------------------
+    // ➡️ MODIFICATIONS: Parsing des nombres formatés
+    // ----------------------------------------------------
+    const parsedNewMontantPaye = parseFloat(parseNumberFromFormattedString(newMontantPaye));
+    // ----------------------------------------------------
 
     if (isNaN(parsedNewMontantPaye) || parsedNewMontantPaye < 0) {
       setPaymentModalError('The paid amount must be a positive number or zero.');
@@ -333,11 +348,7 @@ export default function SpecialOrders() {
     setConfirmModalContent({ title, message });
     setOnConfirmAction(() => (currentReason) => action(currentReason));
     setConfirmModalError('');
-    // ----------------------------------------------------
-    // ➡️ MODIFICATIONS: Initialisation de la raison de retour
-    // ----------------------------------------------------
     setReturnReasonInput('Problème defectueux du client');
-    // ----------------------------------------------------
     setIsConfirming(false);
     setShowConfirmModal(true);
   };
@@ -371,7 +382,11 @@ export default function SpecialOrders() {
             ref={textareaRef}
             id="reasonInput"
             value={returnReasonInput}
+            // ----------------------------------------------------
+            // ➡️ MODIFICATIONS: Permet de modifier le texte
+            // ----------------------------------------------------
             onChange={(e) => setReturnReasonInput(e.target.value)}
+            // ----------------------------------------------------
             rows={2}
             className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-200"
             placeholder="Ex: Client changed mind..."
@@ -402,7 +417,11 @@ export default function SpecialOrders() {
             ref={textareaRef}
             id="reasonInput"
             value={returnReasonInput}
+            // ----------------------------------------------------
+            // ➡️ MODIFICATIONS: Permet de modifier le texte
+            // ----------------------------------------------------
             onChange={(e) => setReturnReasonInput(e.target.value)}
+            // ----------------------------------------------------
             rows={2}
             className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200"
             placeholder="Ex: Defective product..."
@@ -452,9 +471,6 @@ export default function SpecialOrders() {
 
 
   return (
-    // ----------------------------------------------------
-    // ➡️ MODIFICATIONS: Amélioration du responsive avec Tailwind CSS
-    // ----------------------------------------------------
     <div className="p-2 sm:p-4 md:p-6 bg-gray-50 min-h-screen font-sans">
       <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 text-center">Gestion des Commandes Spéciales</h2>
 
@@ -559,7 +575,11 @@ export default function SpecialOrders() {
                   </td>
                   <td className="px-4 py-4 text-center">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.statut)}`}>
-                      {order.statut}
+                       {/* ---------------------------------------------------- */}
+                      {/* ➡️ MODIFICATIONS: Utilisation du map pour les statuts */}
+                      {/* ---------------------------------------------------- */}
+                      {STATUS_DISPLAY_MAP[order.statut] || order.statut}
+                      {/* ---------------------------------------------------- */}
                     </span>
                     {order.raison_annulation && (
                       <p className="text-xs text-gray-500 mt-1">Raison: {order.raison_annulation}</p>
@@ -574,7 +594,7 @@ export default function SpecialOrders() {
                           title="Modifier Paiement"
                           disabled={isLoadingPayment}
                         >
-                          <CurrencyDollarIcon className="h-5 w-5" />
+                          {isLoadingPayment ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <CurrencyDollarIcon className="h-5 w-5" />}
                         </button>
                       )}
                       {(order.statut !== 'annulé' && order.statut !== 'remplacé') && (
@@ -700,9 +720,6 @@ export default function SpecialOrders() {
                 </datalist>
               </div>
 
-              {/* ---------------------------------------------------- */}
-              {/* ➡️ MODIFICATIONS: Ajout de l'autocomplétion pour Marque et Modèle */}
-              {/* ---------------------------------------------------- */}
               <div>
                 <label htmlFor="marque" className="block text-xs sm:text-sm font-medium text-gray-700">Marque</label>
                 <input
@@ -711,7 +728,7 @@ export default function SpecialOrders() {
                   value={marque}
                   onChange={(e) => {
                     setMarque(e.target.value);
-                    setModele(''); // Reset model when brand changes
+                    setModele('');
                   }}
                   list="marque-list"
                   required
@@ -734,7 +751,7 @@ export default function SpecialOrders() {
                   list="modele-list"
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-                  disabled={!marque} // Disable if no brand is selected
+                  disabled={!marque}
                 />
                 <datalist id="modele-list">
                   {marque && MODELES[marque] && MODELES[marque].map(item => (
@@ -742,9 +759,6 @@ export default function SpecialOrders() {
                   ))}
                 </datalist>
               </div>
-              {/* ---------------------------------------------------- */}
-              {/* Fin des modifications pour l'autocomplétion */}
-              {/* ---------------------------------------------------- */}
 
               <div>
                 <label htmlFor="stockage" className="block text-xs sm:text-sm font-medium text-gray-700">Stockage (Go)</label>
@@ -807,43 +821,64 @@ export default function SpecialOrders() {
               <div>
                 <label htmlFor="prixAchatFournisseur" className="block text-xs sm:text-sm font-medium text-gray-700">Prix Achat Fournisseur (CFA)</label>
                 <input
-                  type="number"
+                  // ----------------------------------------------------
+                  // ➡️ MODIFICATIONS: Utilisation de type="text" pour le formatage
+                  // ----------------------------------------------------
+                  type="text"
                   id="prixAchatFournisseur"
                   value={prixAchatFournisseur}
-                  onChange={(e) => setPrixAchatFournisseur(e.target.value)}
+                  onChange={(e) => {
+                    const value = parseNumberFromFormattedString(e.target.value);
+                    if (!isNaN(value)) {
+                      setPrixAchatFournisseur(formatNumberWithSpaces(value));
+                    }
+                  }}
                   required
-                  min="0"
-                  step="1"
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                 />
+                {/* ---------------------------------------------------- */}
               </div>
 
               <div>
                 <label htmlFor="prixVenteClient" className="block text-xs sm:text-sm font-medium text-gray-700">Prix Vente Client (CFA)</label>
                 <input
-                  type="number"
+                  // ----------------------------------------------------
+                  // ➡️ MODIFICATIONS: Utilisation de type="text" pour le formatage
+                  // ----------------------------------------------------
+                  type="text"
                   id="prixVenteClient"
                   value={prixVenteClient}
-                  onChange={(e) => setPrixVenteClient(e.target.value)}
+                  onChange={(e) => {
+                    const value = parseNumberFromFormattedString(e.target.value);
+                    if (!isNaN(value)) {
+                      setPrixVenteClient(formatNumberWithSpaces(value));
+                    }
+                  }}
                   required
-                  min="0"
-                  step="1"
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                 />
+                {/* ---------------------------------------------------- */}
               </div>
 
               {!currentOrder && (
                 <div>
                   <label htmlFor="initialMontantPaye" className="block text-xs sm:text-sm font-medium text-gray-700">Montant Payé Initial (CFA)</label>
                   <input
-                    type="number"
+                    // ----------------------------------------------------
+                    // ➡️ MODIFICATIONS: Utilisation de type="text" pour le formatage
+                    // ----------------------------------------------------
+                    type="text"
                     id="initialMontantPaye"
                     value={initialMontantPaye}
-                    onChange={(e) => setInitialMontantPaye(e.target.value)}
-                    min="0"
-                    step="1"
+                    onChange={(e) => {
+                      const value = parseNumberFromFormattedString(e.target.value);
+                      if (!isNaN(value)) {
+                        setInitialMontantPaye(formatNumberWithSpaces(value));
+                      }
+                    }}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                   />
+                  {/* ---------------------------------------------------- */}
                 </div>
               )}
 
@@ -893,15 +928,22 @@ export default function SpecialOrders() {
                 </p>
                 <label htmlFor="newMontantPaye" className="block text-sm font-medium text-gray-700">Nouveau Montant Payé Total (CFA)</label>
                 <input
-                  type="number"
+                  // ----------------------------------------------------
+                  // ➡️ MODIFICATIONS: Utilisation de type="text" pour le formatage
+                  // ----------------------------------------------------
+                  type="text"
                   id="newMontantPaye"
                   value={newMontantPaye}
-                  onChange={(e) => setNewMontantPaye(e.target.value)}
+                  onChange={(e) => {
+                    const value = parseNumberFromFormattedString(e.target.value);
+                    if (!isNaN(value)) {
+                      setNewMontantPaye(formatNumberWithSpaces(value));
+                    }
+                  }}
                   required
-                  min="0"
-                  step="1"
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                 />
+                {/* ---------------------------------------------------- */}
               </div>
 
               {paymentModalError && (
@@ -963,7 +1005,11 @@ export default function SpecialOrders() {
                 }`}
                 disabled={isConfirming || (confirmModalContent.message && typeof confirmModalContent.message !== 'string' && !returnReasonInput.trim())}
               >
-                {isConfirming ? 'Confirmation...' : 'Confirmer'}
+                {isConfirming ? (
+                  <ArrowPathIcon className="h-5 w-5 animate-spin mx-auto" />
+                ) : (
+                  'Confirmer'
+                )}
               </button>
             </div>
           </div>
