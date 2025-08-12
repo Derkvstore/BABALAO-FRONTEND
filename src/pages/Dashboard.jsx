@@ -36,7 +36,7 @@ import RetoursMobiles from './RetoursMobiles.jsx';
 import RemplacementsFournisseur from './RemplacementsFournisseur.jsx';
 import Recherche from './Recherche.jsx';
 import Fournisseurs from './Fournisseurs.jsx';
-import Factures from './Factures.jsx';
+// import Factures from './Factures.jsx';
 import Benefices from '../pages/Benefices.jsx';
 import SpecialOrders from '../pages/SpecialOrders.jsx';
 import logo from '../assets/logo.png';
@@ -45,7 +45,7 @@ const sections = [
   { name: 'Produits', icon: CubeIcon },
   { name: 'Vente', icon: PlusCircleIcon },
   { name: 'Sorties', icon: ClockIcon },
-  { name: 'Factures', icon: DocumentTextIcon },
+  //{ name: 'Factures', icon: DocumentTextIcon },
   { name: 'Recherche', icon: MagnifyingGlassIcon },
   { name: 'Bénéfices', icon: CurrencyDollarIcon },
   { name: 'Dettes', icon: Bars3Icon },
@@ -119,8 +119,8 @@ export default function Dashboard() {
           return <Sorties />;
         case 'Recherche':
           return <Recherche />;
-        case 'Factures':
-          return <Factures />;
+        // case 'Factures':
+        //   return <Factures />;
         case 'Bénéfices':
           return <Benefices />;
         case 'Achat':
