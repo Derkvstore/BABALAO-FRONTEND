@@ -36,23 +36,23 @@ import RetoursMobiles from './RetoursMobiles.jsx';
 import RemplacementsFournisseur from './RemplacementsFournisseur.jsx';
 import Recherche from './Recherche.jsx';
 import Fournisseurs from './Fournisseurs.jsx';
-// import Factures from './Factures.jsx';
+import Factures from './Factures.jsx';
 import Benefices from '../pages/Benefices.jsx';
 import SpecialOrders from '../pages/SpecialOrders.jsx';
-// import logo from '../assets/logo.png';
+import logo from '../assets/logo.png';
 
 const sections = [
   { name: 'Produits', icon: CubeIcon },
   { name: 'Vente', icon: PlusCircleIcon },
   { name: 'Sorties', icon: ClockIcon },
-  //{ name: 'Factures', icon: DocumentTextIcon },
+  { name: 'Factures', icon: DocumentTextIcon },
   { name: 'Recherche', icon: MagnifyingGlassIcon },
   { name: 'Bénéfices', icon: CurrencyDollarIcon },
   { name: 'Dettes', icon: Bars3Icon },
   { name: 'Rapport', icon: ChartBarIcon },
   { name: 'Clients', icon: UserGroupIcon },
   { name: 'Retour mobile', icon: ArrowLeftIcon },
-  { name: 'Fournisseurs', icon: TruckIcon },
+  { name: 'Liste Fournisseurs', icon: TruckIcon },
   { name: 'Rtrs Fournisseur', icon: ArrowsRightLeftIcon },
   { name: 'Achat', icon: ClipboardDocumentListIcon }
 ];
@@ -119,15 +119,15 @@ export default function Dashboard() {
           return <Sorties />;
         case 'Recherche':
           return <Recherche />;
-        // case 'Factures':
-        //   return <Factures />;
+        case 'Factures':
+          return <Factures />;
         case 'Bénéfices':
           return <Benefices />;
         case 'Achat':
           return <SpecialOrders />;
         case 'Retour mobile':
           return <RetoursMobiles />;
-        case 'Fournisseurs':
+        case 'Liste Fournisseurs':
           return <Fournisseurs />;
         case 'Rtrs Fournisseur':
           return <RemplacementsFournisseur />;
@@ -211,7 +211,7 @@ export default function Dashboard() {
             >
               <Bars3Icon className="h-6 w-6" />
             </button>
-            {/* <img src={logo} alt="NIANGADOU ELECTRO Logo" className="h-10 w-10 mr-2" /> */}
+            <img src={logo} alt="NIANGADOU ELECTRO Logo" className="h-10 w-10 mr-2" />
             <h1 className="text-xl sm:text-2xl font-semibold text-blue-700 mr-4 dark:text-white transition-colors duration-300">APPLE BKO</h1>
           </div>
 
