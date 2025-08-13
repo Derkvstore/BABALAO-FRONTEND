@@ -71,7 +71,7 @@ export default function Login() {
         </div>
 
         <h2 className="text-center text-2xl font-light text-blue-700 mb-6">
-         FRESH APP
+         APPLE BKO
         </h2>
 
         {message && (
