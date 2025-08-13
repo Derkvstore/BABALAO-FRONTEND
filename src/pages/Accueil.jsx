@@ -30,8 +30,35 @@ export default function Accueil() {
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
 
   const quotes = [
-   "FRESH APP bon coin des iPhones 🌟",
-   "Evite les dettes aux boubou tigani 😩"
+  "📱✨ APPLE BKO – L’iPhone authentique, la qualité garantie !",
+
+"🍏📦 Chez APPLE BKO, chaque iPhone est 100% original !",
+
+"💎📱 APPLE BKO – L’excellence dans votre main !",
+
+"🔥🚀 Obtenez votre iPhone de rêve chez APPLE BKO !",
+
+"📍🇲🇱 APPLE BKO – Votre destination iPhone au Mali !",
+
+"💼📱 Professionnels & particuliers, APPLE BKO a l’iPhone qu’il vous faut !",
+
+"📦💯 APPLE BKO – Zéro contrefaçon, que du vrai !",
+
+"⚡📱 APPLE BKO – La performance Apple à portée de main !",
+
+"📸🍏 APPLE BKO – Des photos sublimes, des souvenirs uniques !",
+
+"🛡️📱 APPLE BKO – Qualité, authenticité, satisfaction !",
+
+"💚📱 APPLE BKO – Parce que vous méritez le meilleur !",
+
+"🎯🍏 L’iPhone original ? C’est seulement chez APPLE BKO !",
+
+"🌟📱 APPLE BKO – Des iPhones qui font tourner les têtes !",
+
+"🚚📦 Livraison rapide & iPhones authentiques chez APPLE BKO !",
+
+"🖤🍏 APPLE BKO – La passion Apple, sans compromis !"
   ];
 
   const navigate = useNavigate();
