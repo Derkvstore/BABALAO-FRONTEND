@@ -72,7 +72,7 @@ export default function App() {
   };
 
   const backendUrl = import.meta.env.PROD
-    ? 'https://fresh-backned-production.up.railway.app'
+    ? 'https://babalo-backend-production.up.railway.app'
 
     : 'http://localhost:3001';
 

@@ -16,7 +16,7 @@ export default function Liste() {
 
   // ✅ LOGIQUE CORRIGÉE POUR GÉRER LOCAL ET PRODUCTION
   const backendUrl = import.meta.env.PROD
-    ?   'https://fresh-backned-production.up.railway.app'
+    ? 'https://babalo-backend-production.up.railway.app'
     : 'http://localhost:3001';
 
   // Obtenir la date du jour formatée
