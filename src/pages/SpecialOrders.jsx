@@ -16,7 +16,9 @@ import {
   ArrowPathIcon,
   CurrencyDollarIcon,
   ArrowUturnLeftIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  TrashIcon,
+  PencilIcon
 } from '@heroicons/react/24/outline';
 
 const MARQUES = ["iPhone", "Samsung", "iPad", "AirPod", "Google", "Apple", "Play", "Nintendo", "MacBook" ];
@@ -64,9 +66,7 @@ export default function SpecialOrders() {
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
   const [searchTerm, setSearchTerm] = useState('');
   
-  // ➡️ AJOUTÉ : État pour le bénéfice total
   const [totalSoldBenefice, setTotalSoldBenefice] = useState(0);
-  // ➡️ AJOUTÉ : État pour les données de bénéfice par jour
   const [dailySoldData, setDailySoldData] = useState({});
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -422,6 +422,19 @@ export default function SpecialOrders() {
     );
   };
 
+  const handleDeleteOrder = async (orderId) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette commande ? Cette action est irréversible.")) {
+      try {
+        await axios.delete(`${backendUrl}/api/special-orders/${orderId}`);
+        setStatusMessage({ type: 'success', text: 'Commande spéciale supprimée avec succès!' });
+        fetchSpecialOrders(); 
+      } catch (err) {
+        console.error('Erreur lors de la suppression de la commande:', err);
+        setStatusMessage({ type: 'error', text: `Erreur: ${err.response?.data?.error || err.message}` });
+      }
+    }
+  };
+
   useEffect(() => {
     if (showConfirmModal && textareaRef.current) {
       const timer = setTimeout(() => {
@@ -442,7 +455,6 @@ export default function SpecialOrders() {
     );
   });
 
-  // ➡️ MODIFICATION : Nouvelle logique pour calculer les bénéfices par jour ET le bénéfice total
   useEffect(() => {
     const dailyData = {};
     let totalBenefice = 0;
@@ -454,8 +466,7 @@ export default function SpecialOrders() {
         const prixAchat = parseFloat(order.prix_achat_fournisseur) || 0;
         const benefice = prixVente - prixAchat;
 
-        totalBenefice += benefice; // Ajoute au bénéfice total
-
+        totalBenefice += benefice;
         if (!dailyData[saleDate]) {
           dailyData[saleDate] = {
             totalBenefice: 0,
@@ -473,7 +484,7 @@ export default function SpecialOrders() {
     });
 
     setDailySoldData(dailyData);
-    setTotalSoldBenefice(totalBenefice); // Met à jour le bénéfice total
+    setTotalSoldBenefice(totalBenefice);
   }, [filteredOrders]);
 
 
@@ -481,13 +492,11 @@ export default function SpecialOrders() {
     <div className="p-2 sm:p-4 md:p-6 bg-gray-50 min-h-screen font-sans">
       <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 text-center">Gestion des Commandes Spéciales</h2>
 
-      {/* ➡️ RÉINTÉGRÉ : Affichage du bénéfice total */}
       <div className="mt-4 p-3 sm:p-4 bg-green-100 border border-green-400 text-green-800 rounded-lg shadow-md text-center mb-4">
         <p className="text-sm sm:text-lg md:text-xl font-semibold">Bénéfice Total des Commandes Spéciales Vendues :</p>
         <p className="text-xl sm:text-2xl md:text-3xl font-extrabold mt-1">{formatCFA(totalSoldBenefice)}</p>
       </div>
 
-      {/* ➡️ AJOUTÉ : Affichage des bénéfices par jour de vente */}
       {Object.entries(dailySoldData).length > 0 && (
         <div className="mt-4">
           <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Bénéfices par Jour de Vente</h3>
@@ -618,6 +627,22 @@ export default function SpecialOrders() {
                   </td>
                   <td className="px-4 py-4 text-center whitespace-nowrap">
                     <div className="flex space-x-1 justify-center">
+                      <button
+                          onClick={() => openEditModal(order)}
+                          className="p-1 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                          title="Modifier la commande"
+                      >
+                          <PencilIcon className="h-5 w-5" />
+                      </button>
+
+                      <button
+                          onClick={() => handleDeleteOrder(order.order_id)}
+                          className="p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                          title="Supprimer la commande"
+                      >
+                          <TrashIcon className="h-5 w-5" />
+                      </button>
+
                       {(order.statut !== 'vendu' && order.statut !== 'annulé' && order.statut !== 'remplacé') && (
                         <button
                           onClick={() => handleUpdatePaymentClick(order)}
