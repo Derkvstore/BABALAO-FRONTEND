@@ -6,7 +6,8 @@ const QUARTIERS_BAMAKO = [
   "ACI 2000", "Badalabougou", "Bolibana", "Boulkassoumbougou", "Djelibougou",
   "Djicoroni Para", "Faladiè", "Hippodrome", "Magnambougou", "Missira",
   "Niamakoro", "Quinzambougou", "Sebénikoro", "Sogoniko", "Toumambougou",
-  "Yirimadio", "Kalabancoura", "Sikasso", "Koulikoro", "Ségou"
+  "Yirimadio", "Kalabancoura", "Sikasso", "Koulikoro", "Ségou", "Halle de Bamako",
+  
 ];
 
 export default function Fournisseurs() {
