@@ -30,7 +30,7 @@ const MODELES = {
   iPad: ["Air 10éme Gen", "Air 11éme Gen", "Pro", "Mini"],
   AirPod: ["1ère Gen", "2ème Gen", "3ème Gen", "4ème Gen", "Pro 1ème Gen,", "2ème Gen", "Max"],
   Google: ["PIXEL 8 PRO"],
-  APPLE:["WATCH 09 41mm","WATCH 09 45mm", "WATCH 10 41mm","WATCH 10 46mm","WATCH 11 41mm","WATCH 11 46mm" ],
+  Apple:["WATCH 09 41mm","WATCH 09 45mm", "WATCH 10 41mm","WATCH 10 46mm","WATCH 11 41mm","WATCH 11 46mm" ],
   Play: ["Station 5", "Station 4", "Station Portable"],
   Nintendo: ["Switch", "Oled"],
   MacBook: ["Air M1 13 2020","Air M1 15 2020","Air M2 13 2020", "Air 15 M2 2020","Air M2 2020","Air M1 2020","Air M1 2020","Air M1 2020","Air M1 2020","Pro", ]
