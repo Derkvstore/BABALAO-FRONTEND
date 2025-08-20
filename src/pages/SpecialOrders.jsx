@@ -246,15 +246,14 @@ export default function SpecialOrders() {
       imei: imei || null,
       prix_achat_fournisseur: parseFloat(parseNumberFromFormattedString(prixAchatFournisseur)),
       prix_vente_client: parseFloat(parseNumberFromFormattedString(prixVenteClient)),
-      montant_paye: parseFloat(parseNumberFromFormattedString(initialMontantPaye || 0))
+      montant_paye: parseFloat(parseNumberFromFormattedString(initialMontantPaye || 0)),
+      statut, // Ajout du statut
+      raison_annulation // Ajout de la raison d'annulation
     };
 
     try {
       if (currentOrder) {
-        await axios.put(`${backendUrl}/api/special-orders/${currentOrder.order_id}/update-status`, {
-            statut: statut,
-            raison_annulation: raisonAnnulation
-        });
+        await axios.put(`${backendUrl}/api/special-orders/${currentOrder.order_id}`, orderData);
         setStatusMessage({ type: 'success', text: 'Special order updated successfully!' });
       } else {
         await axios.post(`${backendUrl}/api/special-orders`, orderData);
