@@ -247,8 +247,8 @@ export default function SpecialOrders() {
       prix_achat_fournisseur: parseFloat(parseNumberFromFormattedString(prixAchatFournisseur)),
       prix_vente_client: parseFloat(parseNumberFromFormattedString(prixVenteClient)),
       montant_paye: parseFloat(parseNumberFromFormattedString(initialMontantPaye || 0)),
-      statut, // Ajout du statut
-      raison_annulation // Ajout de la raison d'annulation
+      statut,
+      raison_annulation: raisonAnnulation
     };
 
     try {
