@@ -626,6 +626,7 @@ export default function SpecialOrders() {
                   </td>
                   <td className="px-4 py-4 text-center whitespace-nowrap">
                     <div className="flex space-x-1 justify-center">
+                      {/* Boutons toujours visibles */}
                       <button
                           onClick={() => openEditModal(order)}
                           className="p-1 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
@@ -642,85 +643,144 @@ export default function SpecialOrders() {
                           <TrashIcon className="h-5 w-5" />
                       </button>
 
-                      {(order.statut !== 'vendu' && order.statut !== 'annulé' && order.statut !== 'remplacé') && (
-                        <button
-                          onClick={() => handleUpdatePaymentClick(order)}
-                          className="p-1 rounded-full bg-yellow-100 text-yellow-600 hover:bg-yellow-200 transition-colors"
-                          title="Modifier Paiement"
-                          disabled={isLoadingPayment}
-                        >
-                           {isLoadingPayment ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <CurrencyDollarIcon className="h-5 w-5" />}
-                        </button>
-                      )}
-                      {(order.statut !== 'annulé' && order.statut !== 'remplacé') && (
-                        <button
-                          onClick={() => handleCancelSpecialOrderClick(order)}
-                          className="p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
-                          title="Annuler la commande"
-                          disabled={statusUpdateLoading[order.order_id]}
-                        >
-                          {statusUpdateLoading[order.order_id] ? (
-                            <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <ArrowUturnLeftIcon className="h-5 w-5" />
-                          )}
-                        </button>
-                      )}
+                      {/* Boutons conditionnels basés sur le statut */}
                       {order.statut === 'en_attente' && (
-                        <button
-                          onClick={() => updateOrderStatus(order.order_id, 'commandé')}
-                          className="p-1 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
-                          title="Marquer comme Commandé"
-                          disabled={statusUpdateLoading[order.order_id]}
-                        >
-                          {statusUpdateLoading[order.order_id] ? (
-                            <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <TruckIcon className="h-5 w-5" />
-                          )}
-                        </button>
+                          <>
+                              <button
+                                  onClick={() => handleUpdatePaymentClick(order)}
+                                  className="p-1 rounded-full bg-yellow-100 text-yellow-600 hover:bg-yellow-200 transition-colors"
+                                  title="Modifier Paiement"
+                                  disabled={isLoadingPayment}
+                              >
+                                  {isLoadingPayment ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <CurrencyDollarIcon className="h-5 w-5" />}
+                              </button>
+                              <button
+                                  onClick={() => updateOrderStatus(order.order_id, 'commandé')}
+                                  className="p-1 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                                  title="Marquer comme Commandé"
+                                  disabled={statusUpdateLoading[order.order_id]}
+                              >
+                                  {statusUpdateLoading[order.order_id] ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <TruckIcon className="h-5 w-5" />}
+                              </button>
+                              <button
+                                  onClick={() => handleCancelSpecialOrderClick(order)}
+                                  className="p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                                  title="Annuler la commande"
+                                  disabled={statusUpdateLoading[order.order_id]}
+                              >
+                                  {statusUpdateLoading[order.order_id] ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <ArrowUturnLeftIcon className="h-5 w-5" />}
+                              </button>
+                          </>
                       )}
+
                       {order.statut === 'commandé' && (
-                        <button
-                          onClick={() => updateOrderStatus(order.order_id, 'reçu')}
-                          className="p-1 rounded-full bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors"
-                          title="Marquer comme Reçu"
-                          disabled={statusUpdateLoading[order.order_id]}
-                        >
-                          {statusUpdateLoading[order.order_id] ? (
-                            <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <ArchiveBoxIcon className="h-5 w-5" />
-                          )}
-                        </button>
+                          <>
+                              <button
+                                  onClick={() => handleUpdatePaymentClick(order)}
+                                  className="p-1 rounded-full bg-yellow-100 text-yellow-600 hover:bg-yellow-200 transition-colors"
+                                  title="Modifier Paiement"
+                                  disabled={isLoadingPayment}
+                              >
+                                  {isLoadingPayment ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <CurrencyDollarIcon className="h-5 w-5" />}
+                              </button>
+                              <button
+                                  onClick={() => updateOrderStatus(order.order_id, 'reçu')}
+                                  className="p-1 rounded-full bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors"
+                                  title="Marquer comme Reçu"
+                                  disabled={statusUpdateLoading[order.order_id]}
+                              >
+                                  {statusUpdateLoading[order.order_id] ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <ArchiveBoxIcon className="h-5 w-5" />}
+                              </button>
+                              <button
+                                  onClick={() => handleCancelSpecialOrderClick(order)}
+                                  className="p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                                  title="Annuler la commande"
+                                  disabled={statusUpdateLoading[order.order_id]}
+                              >
+                                  {statusUpdateLoading[order.order_id] ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <ArrowUturnLeftIcon className="h-5 w-5" />}
+                              </button>
+                          </>
                       )}
-                      {(order.statut === 'reçu' || order.statut === 'paiement_partiel') && parseFloat(order.montant_restant) <= 0 && (
-                        <button
-                          onClick={() => updateOrderStatus(order.order_id, 'vendu')}
-                          className="p-1 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
-                          title="Marquer comme Vendu"
-                          disabled={statusUpdateLoading[order.order_id]}
-                        >
-                          {statusUpdateLoading[order.order_id] ? (
-                            <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <CheckCircleIcon className="h-5 w-5" />
-                          )}
-                        </button>
+                      
+                      {order.statut === 'reçu' && (
+                          <>
+                              <button
+                                  onClick={() => handleUpdatePaymentClick(order)}
+                                  className="p-1 rounded-full bg-yellow-100 text-yellow-600 hover:bg-yellow-200 transition-colors"
+                                  title="Modifier Paiement"
+                                  disabled={isLoadingPayment}
+                              >
+                                  {isLoadingPayment ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <CurrencyDollarIcon className="h-5 w-5" />}
+                              </button>
+                              {parseFloat(order.montant_restant) <= 0 && (
+                                  <button
+                                      onClick={() => updateOrderStatus(order.order_id, 'vendu')}
+                                      className="p-1 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
+                                      title="Marquer comme Vendu"
+                                      disabled={statusUpdateLoading[order.order_id]}
+                                  >
+                                      {statusUpdateLoading[order.order_id] ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <CheckCircleIcon className="h-5 w-5" />}
+                                  </button>
+                              )}
+                              <button
+                                  onClick={() => handleReplaceSpecialOrderClick(order)}
+                                  className="p-1 rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition-colors"
+                                  title="Marquer comme Remplacé (Retourner)"
+                                  disabled={statusUpdateLoading[order.order_id]}
+                              >
+                                  {statusUpdateLoading[order.order_id] ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <ArrowPathIcon className="h-5 w-5" />}
+                              </button>
+                          </>
                       )}
-                      {(order.statut === 'vendu' || order.statut === 'reçu' || order.statut === 'paiement_partiel') && (
-                        <button
-                          onClick={() => handleReplaceSpecialOrderClick(order)}
-                          className="p-1 rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition-colors"
-                          title="Marquer comme Remplacé (Retourner)"
-                          disabled={statusUpdateLoading[order.order_id]}
-                        >
-                          {statusUpdateLoading[order.order_id] ? (
-                            <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <ArrowPathIcon className="h-5 w-5" />
-                          )}
-                        </button>
+
+                      {order.statut === 'paiement_partiel' && (
+                          <>
+                              <button
+                                  onClick={() => handleUpdatePaymentClick(order)}
+                                  className="p-1 rounded-full bg-yellow-100 text-yellow-600 hover:bg-yellow-200 transition-colors"
+                                  title="Modifier Paiement"
+                                  disabled={isLoadingPayment}
+                              >
+                                  {isLoadingPayment ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <CurrencyDollarIcon className="h-5 w-5" />}
+                              </button>
+                              {parseFloat(order.montant_restant) <= 0 && (
+                                  <button
+                                      onClick={() => updateOrderStatus(order.order_id, 'vendu')}
+                                      className="p-1 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
+                                      title="Marquer comme Vendu"
+                                      disabled={statusUpdateLoading[order.order_id]}
+                                  >
+                                      {statusUpdateLoading[order.order_id] ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <CheckCircleIcon className="h-5 w-5" />}
+                                  </button>
+                              )}
+                              <button
+                                  onClick={() => handleReplaceSpecialOrderClick(order)}
+                                  className="p-1 rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition-colors"
+                                  title="Marquer comme Remplacé (Retourner)"
+                                  disabled={statusUpdateLoading[order.order_id]}
+                              >
+                                  {statusUpdateLoading[order.order_id] ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <ArrowPathIcon className="h-5 w-5" />}
+                              </button>
+                              <button
+                                  onClick={() => handleCancelSpecialOrderClick(order)}
+                                  className="p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                                  title="Annuler la commande"
+                                  disabled={statusUpdateLoading[order.order_id]}
+                              >
+                                  {statusUpdateLoading[order.order_id] ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <ArrowUturnLeftIcon className="h-5 w-5" />}
+                              </button>
+                          </>
+                      )}
+                      
+                      {order.statut === 'vendu' && (
+                          <button
+                              onClick={() => handleReplaceSpecialOrderClick(order)}
+                              className="p-1 rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition-colors"
+                              title="Marquer comme Remplacé (Retourner)"
+                              disabled={statusUpdateLoading[order.order_id]}
+                          >
+                              {statusUpdateLoading[order.order_id] ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <ArrowPathIcon className="h-5 w-5" />}
+                          </button>
                       )}
                     </div>
                   </td>
