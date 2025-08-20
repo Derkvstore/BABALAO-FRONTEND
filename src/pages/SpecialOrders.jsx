@@ -63,7 +63,9 @@ export default function SpecialOrders() {
   const [currentOrder, setCurrentOrder] = useState(null);
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
   const [searchTerm, setSearchTerm] = useState('');
-  const [totalSoldBenefice, setTotalSoldBenefice] = useState(0);
+  
+  // ➡️ MODIFICATION : Nouvel état pour les données de bénéfice par jour
+  const [dailySoldData, setDailySoldData] = useState({});
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [currentOrderToEditPayment, setCurrentOrderToEditPayment] = useState(null);
@@ -438,16 +440,34 @@ export default function SpecialOrders() {
     );
   });
 
+  // ➡️ MODIFICATION : Nouvelle logique pour calculer les bénéfices par jour
   useEffect(() => {
-    const calculatedBenefice = filteredOrders.reduce((sum, order) => {
-      if (order.statut === 'vendu') {
+    const dailyData = {};
+
+    filteredOrders.forEach(order => {
+      if (order.statut === 'vendu' && order.date_vente) {
+        const saleDate = order.date_vente.split('T')[0];
         const prixVente = parseFloat(order.prix_vente_client) || 0;
         const prixAchat = parseFloat(order.prix_achat_fournisseur) || 0;
-        return sum + (prixVente - prixAchat);
+        const benefice = prixVente - prixAchat;
+
+        if (!dailyData[saleDate]) {
+          dailyData[saleDate] = {
+            totalBenefice: 0,
+            produits: []
+          };
+        }
+
+        dailyData[saleDate].totalBenefice += benefice;
+        dailyData[saleDate].produits.push({
+          marque: order.marque,
+          modele: order.modele,
+          benefice: benefice
+        });
       }
-      return sum;
-    }, 0);
-    setTotalSoldBenefice(calculatedBenefice);
+    });
+
+    setDailySoldData(dailyData);
   }, [filteredOrders]);
 
 
@@ -455,10 +475,32 @@ export default function SpecialOrders() {
     <div className="p-2 sm:p-4 md:p-6 bg-gray-50 min-h-screen font-sans">
       <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 text-center">Gestion des Commandes Spéciales</h2>
 
-      <div className="mt-4 p-3 sm:p-4 bg-green-100 border border-green-400 text-green-800 rounded-lg shadow-md text-center mb-4">
-        <p className="text-sm sm:text-lg md:text-xl font-semibold">Bénéfice Total des Commandes Spéciales Vendues :</p>
-        <p className="text-xl sm:text-2xl md:text-3xl font-extrabold mt-1">{formatCFA(totalSoldBenefice)}</p>
-      </div>
+      {/* ➡️ MODIFICATION : Affichage des bénéfices par jour de vente */}
+      {Object.entries(dailySoldData).length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Bénéfices par Jour de Vente</h3>
+          {Object.entries(dailySoldData).sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA)).map(([date, data]) => (
+            <div key={date} className="p-3 sm:p-4 bg-green-100 border border-green-400 text-green-800 rounded-lg shadow-md mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <p className="text-sm sm:text-lg md:text-xl font-semibold">
+                  Bénéfice du {formatDate(date)} :
+                </p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-extrabold">{formatCFA(data.totalBenefice)}</p>
+              </div>
+              <div className="text-xs sm:text-sm mt-2">
+                <p className="font-medium text-gray-700">Produits vendus :</p>
+                <ul className="list-disc list-inside ml-4">
+                  {data.produits.map((produit, index) => (
+                    <li key={index} className="text-gray-600">
+                      {produit.marque} {produit.modele} - Bénéfice: {formatCFA(produit.benefice)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {statusMessage.text && (
         <div className={`mb-3 p-2 rounded-md flex items-center justify-between text-xs sm:text-sm
