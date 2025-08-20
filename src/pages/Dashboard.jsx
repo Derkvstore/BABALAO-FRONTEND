@@ -39,9 +39,9 @@ import Recherche from './Recherche.jsx';
 import Fournisseurs from './Fournisseurs.jsx';
 import Factures from './Factures.jsx';
 import Benefices from '../pages/Benefices.jsx';
-import RapportJournalier from './RapportJournalier.jsx';
+//import RapportJournalier from './RapportJournalier.jsx';
 import SpecialOrders from '../pages/SpecialOrders.jsx';
-import FacturesConsolidees from './FacturesConsolidees.jsx';
+//import FacturesConsolidees from './FacturesConsolidees.jsx';
 import logo from '../assets/logo.png';
 
 // J'ai mis à jour ce tableau pour inclure "Accueil"
@@ -50,7 +50,7 @@ const sections = [
   { name: 'Produits', icon: CubeIcon },
   { name: 'Vente', icon: PlusCircleIcon },
   { name: 'Sorties', icon: ClockIcon },
-  { name: 'Factures Clts', icon: DocumentTextIcon },
+  //{ name: 'Factures Clts', icon: DocumentTextIcon },
   { name: 'Factures Gros', icon: ListBulletIcon },
   { name: 'Recherche', icon: MagnifyingGlassIcon },
   { name: 'Clients', icon: UserGroupIcon },
@@ -58,7 +58,7 @@ const sections = [
   { name: 'Bénéfices', icon: CurrencyDollarIcon },
   { name: 'Dettes', icon: Bars3Icon },
   { name: 'Rapport', icon: ChartBarIcon },
-  { name: 'Mouvement', icon: CalendarDaysIcon },
+  //{ name: 'Mouvement', icon: CalendarDaysIcon },
   { name: 'Retour', icon: ArrowLeftIcon },
   { name: 'Rtrs Frns', icon: ArrowsRightLeftIcon },
   { name: 'Achat', icon: ClipboardDocumentListIcon }
@@ -126,8 +126,8 @@ export default function Dashboard() {
           return <Sorties />;
         case 'Recherche':
           return <Recherche />;
-        case 'Factures Clts':
-          return <FacturesConsolidees />;
+        // case 'Factures Clts':
+        //   return <FacturesConsolidees />;
             case 'Factures Gros':
           return <Factures />;
         case 'Bénéfices':
@@ -144,8 +144,8 @@ export default function Dashboard() {
           return <Liste />;
         case 'Rapport':
           return <Rapport />;
-        case 'Mouvement':
-          return <RapportJournalier />;
+        // case 'Mouvement':
+        //   return <RapportJournalier />;
         case 'Accueil':
           return <Accueil />;
         default:
