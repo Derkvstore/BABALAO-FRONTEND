@@ -64,7 +64,9 @@ export default function SpecialOrders() {
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
   const [searchTerm, setSearchTerm] = useState('');
   
-  // ➡️ MODIFICATION : Nouvel état pour les données de bénéfice par jour
+  // ➡️ AJOUTÉ : État pour le bénéfice total
+  const [totalSoldBenefice, setTotalSoldBenefice] = useState(0);
+  // ➡️ AJOUTÉ : État pour les données de bénéfice par jour
   const [dailySoldData, setDailySoldData] = useState({});
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -440,9 +442,10 @@ export default function SpecialOrders() {
     );
   });
 
-  // ➡️ MODIFICATION : Nouvelle logique pour calculer les bénéfices par jour
+  // ➡️ MODIFICATION : Nouvelle logique pour calculer les bénéfices par jour ET le bénéfice total
   useEffect(() => {
     const dailyData = {};
+    let totalBenefice = 0;
 
     filteredOrders.forEach(order => {
       if (order.statut === 'vendu' && order.date_vente) {
@@ -450,6 +453,8 @@ export default function SpecialOrders() {
         const prixVente = parseFloat(order.prix_vente_client) || 0;
         const prixAchat = parseFloat(order.prix_achat_fournisseur) || 0;
         const benefice = prixVente - prixAchat;
+
+        totalBenefice += benefice; // Ajoute au bénéfice total
 
         if (!dailyData[saleDate]) {
           dailyData[saleDate] = {
@@ -468,6 +473,7 @@ export default function SpecialOrders() {
     });
 
     setDailySoldData(dailyData);
+    setTotalSoldBenefice(totalBenefice); // Met à jour le bénéfice total
   }, [filteredOrders]);
 
 
@@ -475,7 +481,13 @@ export default function SpecialOrders() {
     <div className="p-2 sm:p-4 md:p-6 bg-gray-50 min-h-screen font-sans">
       <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 text-center">Gestion des Commandes Spéciales</h2>
 
-      {/* ➡️ MODIFICATION : Affichage des bénéfices par jour de vente */}
+      {/* ➡️ RÉINTÉGRÉ : Affichage du bénéfice total */}
+      <div className="mt-4 p-3 sm:p-4 bg-green-100 border border-green-400 text-green-800 rounded-lg shadow-md text-center mb-4">
+        <p className="text-sm sm:text-lg md:text-xl font-semibold">Bénéfice Total des Commandes Spéciales Vendues :</p>
+        <p className="text-xl sm:text-2xl md:text-3xl font-extrabold mt-1">{formatCFA(totalSoldBenefice)}</p>
+      </div>
+
+      {/* ➡️ AJOUTÉ : Affichage des bénéfices par jour de vente */}
       {Object.entries(dailySoldData).length > 0 && (
         <div className="mt-4">
           <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Bénéfices par Jour de Vente</h3>
@@ -613,11 +625,7 @@ export default function SpecialOrders() {
                           title="Modifier Paiement"
                           disabled={isLoadingPayment}
                         >
-                           {/* ---------------------------------------------------- */}
-                          {/* ➡️ MODIFICATIONS: Bouton de paiement avec loading */}
-                          {/* ---------------------------------------------------- */}
-                          {isLoadingPayment ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <CurrencyDollarIcon className="h-5 w-5" />}
-                          {/* ---------------------------------------------------- */}
+                           {isLoadingPayment ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <CurrencyDollarIcon className="h-5 w-5" />}
                         </button>
                       )}
                       {(order.statut !== 'annulé' && order.statut !== 'remplacé') && (
@@ -986,16 +994,12 @@ export default function SpecialOrders() {
       {showConfirmModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-50 no-print">
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-xl max-w-xs sm:max-w-sm w-full relative z-[60] pointer-events-auto">
-             {/* ---------------------------------------------------- */}
-            {/* ➡️ MODIFICATIONS: Titres et messages traduits */}
-            {/* ---------------------------------------------------- */}
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">{confirmModalContent.title}</h3>
+             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">{confirmModalContent.title}</h3>
             {typeof confirmModalContent.message === 'string' ? (
               <p className="text-sm text-gray-700 mb-4">{confirmModalContent.message}</p>
             ) : (
               <div className="text-sm text-gray-700 mb-4">{confirmModalContent.message}</div>
             )}
-            {/* ---------------------------------------------------- */}
             {confirmModalError && (
               <p className="text-red-500 text-xs mt-1">{confirmModalError}</p>
             )}
