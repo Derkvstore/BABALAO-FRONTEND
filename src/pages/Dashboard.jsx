@@ -32,14 +32,14 @@ import Clients from './Clients.jsx';
 // import Sorties from './Sorties.jsx';
 // import Liste from './Listes.jsx';
 // import Rapport from './Rapport.jsx';
-// import Accueil from './Accueil.jsx';
+import Accueil from './Accueil.jsx';
 // import RetoursMobiles from './RetoursMobiles.jsx';
 // import RemplacementsFournisseur from './RemplacementsFournisseur.jsx';
 // import Recherche from './Recherche.jsx';
 import Fournisseurs from './Fournisseurs.jsx';
 // import Factures from './Factures.jsx';
 // import Benefices from '../pages/Benefices.jsx';
-//import RapportJournalier from './RapportJournalier.jsx';
+import RapportJournalier from './RapportJournalier.jsx';
 import SpecialOrders from '../pages/SpecialOrders.jsx';
 //import FacturesConsolidees from './FacturesConsolidees.jsx';
 import logo from '../assets/logo.png';
@@ -57,7 +57,7 @@ const sections = [
   { name: 'Fournisseurs', icon: TruckIcon },
   // { name: 'Bénéfices', icon: CurrencyDollarIcon },
   // { name: 'Dettes', icon: Bars3Icon },
-  // { name: 'Rapport', icon: ChartBarIcon },
+  { name: 'Rapport', icon: ChartBarIcon },
   // //{ name: 'Mouvement', icon: CalendarDaysIcon },
   // { name: 'Retour', icon: ArrowLeftIcon },
   // { name: 'Rtrs Frns', icon: ArrowsRightLeftIcon },
