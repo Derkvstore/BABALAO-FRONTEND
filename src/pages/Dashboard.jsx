@@ -47,21 +47,22 @@ import logo from '../assets/logo.png';
 // J'ai mis à jour ce tableau pour inclure "Accueil"
 const sections = [
   { name: 'Accueil', icon: HomeIcon },
-  // { name: 'Produits', icon: CubeIcon },
-  // { name: 'Vente', icon: PlusCircleIcon },
-  // { name: 'Sorties', icon: ClockIcon },
-  //{ name: 'Factures Clts', icon: DocumentTextIcon },
-  // { name: 'Factures Gros', icon: ListBulletIcon },
-  // { name: 'Recherche', icon: MagnifyingGlassIcon },
+  { name: 'Achat', icon: ClipboardDocumentListIcon },
   { name: 'Clients', icon: UserGroupIcon },
   { name: 'Fournisseurs', icon: TruckIcon },
-  // { name: 'Bénéfices', icon: CurrencyDollarIcon },
-  // { name: 'Dettes', icon: Bars3Icon },
-  // { name: 'Rapport', icon: ChartBarIcon },
+  { name: 'Produits', icon: CubeIcon },
+  { name: 'Vente', icon: PlusCircleIcon },
+  { name: 'Sorties', icon: ClockIcon },
+  //{ name: 'Factures Clts', icon: DocumentTextIcon },
+  { name: 'Factures Gros', icon: ListBulletIcon },
+  { name: 'Recherche', icon: MagnifyingGlassIcon },
+  { name: 'Bénéfices', icon: CurrencyDollarIcon },
+  { name: 'Dettes', icon: Bars3Icon },
+  { name: 'Rapport', icon: ChartBarIcon },
   //{ name: 'Mouvement', icon: CalendarDaysIcon },
-  // { name: 'Retour', icon: ArrowLeftIcon },
-  // { name: 'Rtrs Frns', icon: ArrowsRightLeftIcon },
-  { name: 'Achat', icon: ClipboardDocumentListIcon }
+  { name: 'Retour', icon: ArrowLeftIcon },
+  { name: 'Rtrs Frns', icon: ArrowsRightLeftIcon },
+  
 ];
 
 export default function Dashboard() {
