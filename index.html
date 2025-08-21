@@ -1,4 +1,4 @@
-<!doctype html>
+<!-- <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -10,4 +10,78 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
+</html> -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Site en attente</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1c1c1c;
+      font-family: 'Arial', sans-serif;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      flex-direction: column;
+      text-align: center;
+      animation: fadeIn 1.5s ease;
+    }
+
+    .alert-icon {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin: 0;
+      color: #ff3b3b;
+    }
+
+    p {
+      font-size: 1.2em;
+      margin-top: 10px;
+      color: #cccccc;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Icône d'alerte SVG -->
+  <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ff3b3b">
+    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+  </svg>
+
+  <h1>Site en attente</h1>
+  <p>Veuillez payer le montant dû pour réactiver ce site.</p>
+
+</body>
 </html>
