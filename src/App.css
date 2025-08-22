@@ -40,3 +40,34 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Styles globaux pour le défilement */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto; /* Permet le défilement sur toute la page */
+}
+
+/* Styles pour l'impression */
+@media print {
+  /* Masque tout ce qui n'est pas la section à imprimer */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Rend visible la section à imprimer et ses enfants */
+  .printable-section, .printable-section * {
+    visibility: visible;
+  }
+  
+  /* S'assure que la section prend toute la page d'impression */
+  .printable-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}

@@ -55,6 +55,22 @@ const STATUS_DISPLAY_MAP = {
   'remplacé': 'REMPLACÉ',
 };
 
+const RAISONS_ANNULATION = [
+  "Le client a changé d'avis",
+  "Produit non disponible chez le fournisseur",
+  "Délai de livraison trop long",
+  "Erreur de saisie de la commande",
+  "Prix fournisseur trop élevé",
+  "Autre (préciser)"
+];
+
+const RAISONS_REMPLACEMENT = [
+  "Produit défectueux",
+  "Mauvaise référence envoyée",
+  "Problème de batterie",
+  "Autre (préciser)"
+];
+
 export default function SpecialOrders() {
   const [orders, setOrders] = useState([]);
   const [clients, setClients] = useState([]);
@@ -66,18 +82,16 @@ export default function SpecialOrders() {
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
   const [searchTerm, setSearchTerm] = useState('');
   
-  const [totalSoldBenefice, setTotalSoldBenefice] = useState(0);
-  const [dailySoldData, setDailySoldData] = useState({});
-
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [currentOrderToEditPayment, setCurrentOrderToEditPayment] = useState(null);
   const [newMontantPaye, setNewMontantPaye] = useState('');
   const [paymentModalError, setPaymentModalError] = useState('');
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [confirmModalContent, setConfirmModalContent] = useState({ title: "", message: null });
+  const [confirmModalContent, setConfirmModalContent] = useState({ title: "", message: null, reasonsList: [], isOtherReason: false });
   const [onConfirmAction, setOnConfirmAction] = useState(null);
-  const [returnReasonInput, setReturnReasonInput] = useState('');
+  const [selectedReason, setSelectedReason] = useState('');
+  const [otherReason, setOtherReason] = useState('');
   const [confirmModalError, setConfirmModalError] = useState('');
   const [isConfirming, setIsConfirming] = useState(false);
   const [isLoadingPayment, setIsLoadingPayment] = useState(false);
@@ -139,14 +153,14 @@ export default function SpecialOrders() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'en_attente': return 'bg-yellow-100 text-yellow-800';
-      case 'commandé': return 'bg-blue-100 text-blue-800';
-      case 'reçu': return 'bg-purple-100 text-purple-800';
-      case 'vendu': return 'bg-green-100 text-green-800';
-      case 'annulé': return 'bg-red-100 text-red-800';
-      case 'remplacé': return 'bg-indigo-100 text-indigo-800';
-      case 'paiement_partiel': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'en_attente': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100';
+      case 'commandé': return 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100';
+      case 'reçu': return 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100';
+      case 'vendu': return 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100';
+      case 'annulé': return 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100';
+      case 'remplacé': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-100';
+      case 'paiement_partiel': return 'bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-100';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100';
     }
   };
 
@@ -336,20 +350,40 @@ export default function SpecialOrders() {
     }
   };
 
-  const openConfirmModal = (title, message, action) => {
-    setConfirmModalContent({ title, message });
+  const openConfirmModal = (title, message, reasonsList, action) => {
+    setConfirmModalContent({ title, message, reasonsList, isOtherReason: false });
+    setSelectedReason('');
+    setOtherReason('');
     setOnConfirmAction(() => (currentReason) => action(currentReason));
     setConfirmModalError('');
-    setReturnReasonInput('');
     setIsConfirming(false);
     setShowConfirmModal(true);
   };
+  
+  const handleReasonChange = (e) => {
+    const value = e.target.value;
+    setSelectedReason(value);
+    setOtherReason('');
+    if (value === "Autre (préciser)") {
+        setConfirmModalContent(prev => ({ ...prev, isOtherReason: true }));
+    } else {
+        setConfirmModalContent(prev => ({ ...prev, isOtherReason: false }));
+    }
+};
+
+const handleConfirm = () => {
+    const finalReason = confirmModalContent.isOtherReason ? otherReason : selectedReason;
+    if (onConfirmAction) {
+        onConfirmAction(finalReason);
+    }
+};
 
   const closeConfirmModal = () => {
     setShowConfirmModal(false);
-    setConfirmModalContent({ title: "", message: null });
+    setConfirmModalContent({ title: "", message: null, reasonsList: [], isOtherReason: false });
     setOnConfirmAction(null);
-    setReturnReasonInput('');
+    setSelectedReason('');
+    setOtherReason('');
     setConfirmModalError('');
     setIsConfirming(false);
   };
@@ -367,25 +401,9 @@ export default function SpecialOrders() {
               </span>
             )}
           </p>
-          <label htmlFor="reasonInput" className="block text-xs font-medium text-gray-700 mb-1 md:text-sm">
-            Raison de l'annulation:
-          </label>
-          <textarea
-            ref={textareaRef}
-            id="reasonInput"
-            value={returnReasonInput}
-            onChange={(e) => setReturnReasonInput(e.target.value)}
-            rows={2}
-            className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-200"
-            placeholder="Ex: Le client a changé d'avis..."
-            required
-            autoFocus
-          ></textarea>
-          {confirmModalError && (
-            <p className="text-red-500 text-xs mt-1">{confirmModalError}</p>
-          )}
         </>
       ),
+      RAISONS_ANNULATION,
       (reason) => updateOrderStatus(order.order_id, 'annulé', reason)
     );
   };
@@ -398,25 +416,9 @@ export default function SpecialOrders() {
           <p className="text-gray-700 mb-2 text-sm md:text-base">
             Êtes-vous sûr de vouloir marquer la commande spéciale pour "{order.marque} {order.modele}" comme "Remplacée" ?
           </p>
-          <label htmlFor="reasonInput" className="block text-xs font-medium text-gray-700 mb-1 md:text-sm">
-            Raison du remplacement:
-          </label>
-          <textarea
-            ref={textareaRef}
-            id="reasonInput"
-            value={returnReasonInput}
-            onChange={(e) => setReturnReasonInput(e.target.value)}
-            rows={2}
-            className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200"
-            placeholder="Ex: Produit défectueux..."
-            required
-            autoFocus
-          ></textarea>
-          {confirmModalError && (
-            <p className="text-red-500 text-xs mt-1">{confirmModalError}</p>
-          )}
         </>
       ),
+      RAISONS_REMPLACEMENT,
       (reason) => updateOrderStatus(order.order_id, 'remplacé', reason)
     );
   };
@@ -434,15 +436,6 @@ export default function SpecialOrders() {
     }
   };
 
-  useEffect(() => {
-    if (showConfirmModal && textareaRef.current) {
-      const timer = setTimeout(() => {
-        textareaRef.current.focus();
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [showConfirmModal, returnReasonInput]);
-
   const filteredOrders = orders.filter(order => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -454,82 +447,19 @@ export default function SpecialOrders() {
     );
   });
 
-  useEffect(() => {
-    const dailyData = {};
-    let totalBenefice = 0;
-
-    filteredOrders.forEach(order => {
-      if (order.statut === 'vendu' && order.date_vente) {
-        const saleDate = order.date_vente.split('T')[0];
-        const prixVente = parseFloat(order.prix_vente_client) || 0;
-        const prixAchat = parseFloat(order.prix_achat_fournisseur) || 0;
-        const benefice = prixVente - prixAchat;
-
-        totalBenefice += benefice;
-        if (!dailyData[saleDate]) {
-          dailyData[saleDate] = {
-            totalBenefice: 0,
-            produits: []
-          };
-        }
-
-        dailyData[saleDate].totalBenefice += benefice;
-        dailyData[saleDate].produits.push({
-          marque: order.marque,
-          modele: order.modele,
-          benefice: benefice
-        });
-      }
-    });
-
-    setDailySoldData(dailyData);
-    setTotalSoldBenefice(totalBenefice);
-  }, [filteredOrders]);
-
 
   return (
-    <div className="p-2 sm:p-4 md:p-6 bg-gray-50 min-h-screen font-sans">
-      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 text-center">Gestion des Commandes Spéciales</h2>
-
-      <div className="mt-4 p-3 sm:p-4 bg-green-100 border border-green-400 text-green-800 rounded-lg shadow-md text-center mb-4">
-        <p className="text-sm sm:text-lg md:text-xl font-semibold">Bénéfice Total des Commandes Spéciales Vendues :</p>
-        <p className="text-xl sm:text-2xl md:text-3xl font-extrabold mt-1">{formatCFA(totalSoldBenefice)}</p>
-      </div>
-
-      {Object.entries(dailySoldData).length > 0 && (
-        <div className="mt-4">
-          <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Bénéfices par Jour de Vente</h3>
-          {Object.entries(dailySoldData).sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA)).map(([date, data]) => (
-            <div key={date} className="p-3 sm:p-4 bg-green-100 border border-green-400 text-green-800 rounded-lg shadow-md mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <p className="text-sm sm:text-lg md:text-xl font-semibold">
-                  Bénéfice du {formatDate(date)} :
-                </p>
-                <p className="text-xl sm:text-2xl md:text-3xl font-extrabold">{formatCFA(data.totalBenefice)}</p>
-              </div>
-              <div className="text-xs sm:text-sm mt-2">
-                <p className="font-medium text-gray-700">Produits vendus :</p>
-                <ul className="list-disc list-inside ml-4">
-                  {data.produits.map((produit, index) => (
-                    <li key={index} className="text-gray-600">
-                      {produit.marque} {produit.modele} - Bénéfice: {formatCFA(produit.benefice)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="p-2 sm:p-4 md:p-6 bg-gray-50 min-h-screen font-sans dark:bg-gray-900 dark:text-gray-100">
+      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200 mb-4 text-center">Gestion des Commandes Spéciales</h2>
 
       {statusMessage.text && (
         <div className={`mb-3 p-2 rounded-md flex items-center justify-between text-xs sm:text-sm
-          ${statusMessage.type === 'success' ? 'bg-green-100 text-green-700 border border-green-400' : 'bg-red-100 text-red-700 border border-red-400'}`}>
+          ${statusMessage.type === 'success' ? 'bg-green-100 text-green-700 border border-green-400 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-700 border border-red-400 dark:bg-red-900 dark:text-red-300'}`}>
           <span>
             {statusMessage.type === 'success' ? <CheckCircleIcon className="h-4 w-4 inline mr-1" /> : <XCircleIcon className="h-4 w-4 inline mr-1" />}
             {statusMessage.text}
           </span>
-          <button onClick={() => setStatusMessage({ type: '', text: '' })} className="ml-2">
+          <button onClick={() => setStatusMessage({ type: '', text: '' })} className="ml-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
             <XMarkIcon className="h-4 w-4" />
           </button>
         </div>
@@ -538,14 +468,14 @@ export default function SpecialOrders() {
       <div className="flex flex-col md:flex-row items-center md:justify-between space-y-3 md:space-y-0 mb-4">
         <div className="relative w-full md:max-w-xs">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />
+            <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
           </span>
           <input
             type="text"
             placeholder="Rechercher par client, fournisseur, marque..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:text-gray-100 dark:placeholder-gray-400"
           />
         </div>
 
@@ -559,15 +489,15 @@ export default function SpecialOrders() {
       </div>
 
       {loadingOrders ? (
-        <p className="text-center text-gray-600 text-sm">Chargement des commandes spéciales...</p>
+        <p className="text-center text-gray-600 dark:text-gray-400 text-sm">Chargement des commandes spéciales...</p>
       ) : errorOrders ? (
-        <p className="text-center text-red-600 text-sm">{errorOrders}</p>
+        <p className="text-center text-red-600 dark:text-red-400 text-sm">{errorOrders}</p>
       ) : filteredOrders.length === 0 ? (
-        <p className="text-center text-gray-600 text-sm">Aucune commande spéciale trouvée.</p>
+        <p className="text-center text-gray-600 dark:text-gray-400 text-sm">Aucune commande spéciale trouvée.</p>
       ) : (
-        <div className="overflow-x-auto bg-white rounded-lg shadow-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-100 text-gray-700 uppercase tracking-wider">
+        <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+            <thead className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 uppercase tracking-wider">
               <tr>
                 <th className="px-4 py-3 text-left">Client</th>
                 <th className="px-4 py-3 text-left">Fournisseur</th>
@@ -582,38 +512,38 @@ export default function SpecialOrders() {
                 <th className="px-4 py-3 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {filteredOrders.map((order) => (
-                <tr key={order.order_id} className="hover:bg-gray-50 transition-colors">
+                <tr key={order.order_id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900 flex items-center">
-                      <UserIcon className="h-4 w-4 mr-1 text-gray-500" /> {order.client_nom}
+                    <div className="font-medium text-gray-900 dark:text-gray-100 flex items-center">
+                      <UserIcon className="h-4 w-4 mr-1 text-gray-500 dark:text-gray-400" /> {order.client_nom}
                     </div>
-                    <div className="text-gray-500 text-xs flex items-center">
+                    <div className="text-gray-500 dark:text-gray-400 text-xs flex items-center">
                       <PhoneIcon className="h-3 w-3 mr-1" /> {order.client_telephone || 'N/A'}
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <BuildingStorefrontIcon className="h-4 w-4 mr-1 text-gray-500" /> {order.fournisseur_nom}
+                    <div className="flex items-center text-gray-700 dark:text-gray-300">
+                      <BuildingStorefrontIcon className="h-4 w-4 mr-1 text-gray-500 dark:text-gray-400" /> {order.fournisseur_nom}
                     </div>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="font-medium text-gray-900 flex items-center">
-                      <TagIcon className="h-4 w-4 mr-1 text-gray-500" /> {order.marque} {order.modele}
+                    <div className="font-medium text-gray-900 dark:text-gray-100 flex items-center">
+                      <TagIcon className="h-4 w-4 mr-1 text-gray-500 dark:text-gray-400" /> {order.marque} {order.modele}
                     </div>
-                    <div className="text-gray-500 text-xs flex items-center">
+                    <div className="text-gray-500 dark:text-gray-400 text-xs flex items-center">
                       <CubeIcon className="h-3 w-3 mr-1" /> {order.stockage || 'N/A'} ({order.type}{order.type_carton ? ` ${order.type_carton}` : ''})
                     </div>
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap">{order.imei || 'N/A'}</td>
-                  <td className="px-4 py-4 text-right whitespace-nowrap">{formatCFA(order.prix_achat_fournisseur)}</td>
-                  <td className="px-4 py-4 text-right whitespace-nowrap font-semibold text-blue-700">{formatCFA(order.prix_vente_client)}</td>
-                  <td className="px-4 py-4 text-right whitespace-nowrap">{formatCFA(order.montant_paye)}</td>
-                  <td className="px-4 py-4 text-right whitespace-nowrap font-semibold text-red-600">{formatCFA(order.montant_restant)}</td>
+                  <td className="px-4 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">{order.imei || 'N/A'}</td>
+                  <td className="px-4 py-4 text-right whitespace-nowrap text-gray-700 dark:text-gray-300">{formatCFA(order.prix_achat_fournisseur)}</td>
+                  <td className="px-4 py-4 text-right whitespace-nowrap font-semibold text-blue-700 dark:text-blue-400">{formatCFA(order.prix_vente_client)}</td>
+                  <td className="px-4 py-4 text-right whitespace-nowrap text-gray-700 dark:text-gray-300">{formatCFA(order.montant_paye)}</td>
+                  <td className="px-4 py-4 text-right whitespace-nowrap font-semibold text-red-600 dark:text-red-400">{formatCFA(order.montant_restant)}</td>
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <ClockIcon className="h-4 w-4 mr-1 text-gray-500" /> {formatDate(order.date_commande)}
+                    <div className="flex items-center text-gray-700 dark:text-gray-300">
+                      <ClockIcon className="h-4 w-4 mr-1 text-gray-500 dark:text-gray-400" /> {formatDate(order.date_commande)}
                     </div>
                   </td>
                   <td className="px-4 py-4 text-center">
@@ -621,7 +551,7 @@ export default function SpecialOrders() {
                       {STATUS_DISPLAY_MAP[order.statut] || order.statut}
                     </span>
                     {order.raison_annulation && (
-                      <p className="text-xs text-gray-500 mt-1">Raison: {order.raison_annulation}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Raison: {order.raison_annulation}</p>
                     )}
                   </td>
                   <td className="px-4 py-4 text-center whitespace-nowrap">
@@ -629,7 +559,7 @@ export default function SpecialOrders() {
                       {/* Boutons toujours visibles */}
                       <button
                           onClick={() => openEditModal(order)}
-                          className="p-1 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                          className="p-1 rounded-full bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors"
                           title="Modifier la commande"
                       >
                           <PencilIcon className="h-5 w-5" />
@@ -637,7 +567,7 @@ export default function SpecialOrders() {
 
                       <button
                           onClick={() => handleDeleteOrder(order.order_id)}
-                          className="p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                          className="p-1 rounded-full bg-red-100 dark:bg-red-800 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-700 transition-colors"
                           title="Supprimer la commande"
                       >
                           <TrashIcon className="h-5 w-5" />
@@ -648,7 +578,7 @@ export default function SpecialOrders() {
                           <>
                               <button
                                   onClick={() => handleUpdatePaymentClick(order)}
-                                  className="p-1 rounded-full bg-yellow-100 text-yellow-600 hover:bg-yellow-200 transition-colors"
+                                  className="p-1 rounded-full bg-yellow-100 dark:bg-yellow-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-700 transition-colors"
                                   title="Modifier Paiement"
                                   disabled={isLoadingPayment}
                               >
@@ -656,7 +586,7 @@ export default function SpecialOrders() {
                               </button>
                               <button
                                   onClick={() => updateOrderStatus(order.order_id, 'commandé')}
-                                  className="p-1 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                                  className="p-1 rounded-full bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors"
                                   title="Marquer comme Commandé"
                                   disabled={statusUpdateLoading[order.order_id]}
                               >
@@ -664,7 +594,7 @@ export default function SpecialOrders() {
                               </button>
                               <button
                                   onClick={() => handleCancelSpecialOrderClick(order)}
-                                  className="p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                                  className="p-1 rounded-full bg-red-100 dark:bg-red-800 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-700 transition-colors"
                                   title="Annuler la commande"
                                   disabled={statusUpdateLoading[order.order_id]}
                               >
@@ -677,7 +607,7 @@ export default function SpecialOrders() {
                           <>
                               <button
                                   onClick={() => handleUpdatePaymentClick(order)}
-                                  className="p-1 rounded-full bg-yellow-100 text-yellow-600 hover:bg-yellow-200 transition-colors"
+                                  className="p-1 rounded-full bg-yellow-100 dark:bg-yellow-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-700 transition-colors"
                                   title="Modifier Paiement"
                                   disabled={isLoadingPayment}
                               >
@@ -685,7 +615,7 @@ export default function SpecialOrders() {
                               </button>
                               <button
                                   onClick={() => updateOrderStatus(order.order_id, 'reçu')}
-                                  className="p-1 rounded-full bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors"
+                                  className="p-1 rounded-full bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-400 hover:bg-purple-200 dark:hover:bg-purple-700 transition-colors"
                                   title="Marquer comme Reçu"
                                   disabled={statusUpdateLoading[order.order_id]}
                               >
@@ -693,7 +623,7 @@ export default function SpecialOrders() {
                               </button>
                               <button
                                   onClick={() => handleCancelSpecialOrderClick(order)}
-                                  className="p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                                  className="p-1 rounded-full bg-red-100 dark:bg-red-800 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-700 transition-colors"
                                   title="Annuler la commande"
                                   disabled={statusUpdateLoading[order.order_id]}
                               >
@@ -706,7 +636,7 @@ export default function SpecialOrders() {
                           <>
                               <button
                                   onClick={() => handleUpdatePaymentClick(order)}
-                                  className="p-1 rounded-full bg-yellow-100 text-yellow-600 hover:bg-yellow-200 transition-colors"
+                                  className="p-1 rounded-full bg-yellow-100 dark:bg-yellow-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-700 transition-colors"
                                   title="Modifier Paiement"
                                   disabled={isLoadingPayment}
                               >
@@ -715,7 +645,7 @@ export default function SpecialOrders() {
                               {parseFloat(order.montant_restant) <= 0 && (
                                   <button
                                       onClick={() => updateOrderStatus(order.order_id, 'vendu')}
-                                      className="p-1 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
+                                      className="p-1 rounded-full bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-700 transition-colors"
                                       title="Marquer comme Vendu"
                                       disabled={statusUpdateLoading[order.order_id]}
                                   >
@@ -724,7 +654,7 @@ export default function SpecialOrders() {
                               )}
                               <button
                                   onClick={() => handleReplaceSpecialOrderClick(order)}
-                                  className="p-1 rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition-colors"
+                                  className="p-1 rounded-full bg-indigo-100 dark:bg-indigo-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-700 transition-colors"
                                   title="Marquer comme Remplacé (Retourner)"
                                   disabled={statusUpdateLoading[order.order_id]}
                               >
@@ -737,7 +667,7 @@ export default function SpecialOrders() {
                           <>
                               <button
                                   onClick={() => handleUpdatePaymentClick(order)}
-                                  className="p-1 rounded-full bg-yellow-100 text-yellow-600 hover:bg-yellow-200 transition-colors"
+                                  className="p-1 rounded-full bg-yellow-100 dark:bg-yellow-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-700 transition-colors"
                                   title="Modifier Paiement"
                                   disabled={isLoadingPayment}
                               >
@@ -746,7 +676,7 @@ export default function SpecialOrders() {
                               {parseFloat(order.montant_restant) <= 0 && (
                                   <button
                                       onClick={() => updateOrderStatus(order.order_id, 'vendu')}
-                                      className="p-1 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
+                                      className="p-1 rounded-full bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-700 transition-colors"
                                       title="Marquer comme Vendu"
                                       disabled={statusUpdateLoading[order.order_id]}
                                   >
@@ -755,7 +685,7 @@ export default function SpecialOrders() {
                               )}
                               <button
                                   onClick={() => handleReplaceSpecialOrderClick(order)}
-                                  className="p-1 rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition-colors"
+                                  className="p-1 rounded-full bg-indigo-100 dark:bg-indigo-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-700 transition-colors"
                                   title="Marquer comme Remplacé (Retourner)"
                                   disabled={statusUpdateLoading[order.order_id]}
                               >
@@ -763,7 +693,7 @@ export default function SpecialOrders() {
                               </button>
                               <button
                                   onClick={() => handleCancelSpecialOrderClick(order)}
-                                  className="p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                                  className="p-1 rounded-full bg-red-100 dark:bg-red-800 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-700 transition-colors"
                                   title="Annuler la commande"
                                   disabled={statusUpdateLoading[order.order_id]}
                               >
@@ -775,7 +705,7 @@ export default function SpecialOrders() {
                       {order.statut === 'vendu' && (
                           <button
                               onClick={() => handleReplaceSpecialOrderClick(order)}
-                              className="p-1 rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition-colors"
+                              className="p-1 rounded-full bg-indigo-100 dark:bg-indigo-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-700 transition-colors"
                               title="Marquer comme Remplacé (Retourner)"
                               disabled={statusUpdateLoading[order.order_id]}
                           >
@@ -793,13 +723,13 @@ export default function SpecialOrders() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-xl p-4 sm:p-6">
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-xl p-4 sm:p-6">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4 text-center">
               {currentOrder ? 'Modifier la Commande Spéciale' : 'Ajouter une Nouvelle Commande Spéciale'}
             </h3>
             <form onSubmit={handleFormSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label htmlFor="clientName" className="block text-xs sm:text-sm font-medium text-gray-700">Nom du Client</label>
+                <label htmlFor="clientName" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Nom du Client</label>
                 <input
                   type="text"
                   id="clientName"
@@ -807,18 +737,18 @@ export default function SpecialOrders() {
                   onChange={(e) => setClientName(e.target.value)}
                   list="client-names"
                   required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                 />
                 <datalist id="client-names">
                   {clients.map(client => (
                     <option key={client.id} value={client.nom} />
                   ))}
                 </datalist>
-                {clientPhone && <p className="text-[10px] text-gray-500 mt-0.5">Téléphone: {clientPhone}</p>}
+                {clientPhone && <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Téléphone: {clientPhone}</p>}
               </div>
 
               <div>
-                <label htmlFor="fournisseurName" className="block text-xs sm:text-sm font-medium text-gray-700">Nom du Fournisseur</label>
+                <label htmlFor="fournisseurName" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Nom du Fournisseur</label>
                 <input
                   type="text"
                   id="fournisseurName"
@@ -826,7 +756,7 @@ export default function SpecialOrders() {
                   onChange={(e) => setFournisseurName(e.target.value)}
                   list="fournisseur-names"
                   required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                 />
                 <datalist id="fournisseur-names">
                   {fournisseurs.map(fournisseur => (
@@ -836,7 +766,7 @@ export default function SpecialOrders() {
               </div>
 
               <div>
-                <label htmlFor="marque" className="block text-xs sm:text-sm font-medium text-gray-700">Marque</label>
+                <label htmlFor="marque" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Marque</label>
                 <input
                   type="text"
                   id="marque"
@@ -847,7 +777,7 @@ export default function SpecialOrders() {
                   }}
                   list="marque-list"
                   required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                 />
                 <datalist id="marque-list">
                   {MARQUES.map(item => (
@@ -857,7 +787,7 @@ export default function SpecialOrders() {
               </div>
 
               <div>
-                <label htmlFor="modele" className="block text-xs sm:text-sm font-medium text-gray-700">Modèle</label>
+                <label htmlFor="modele" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Modèle</label>
                 <input
                   type="text"
                   id="modele"
@@ -865,7 +795,7 @@ export default function SpecialOrders() {
                   onChange={(e) => setModele(e.target.value)}
                   list="modele-list"
                   required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   disabled={!marque}
                 />
                 <datalist id="modele-list">
@@ -876,14 +806,14 @@ export default function SpecialOrders() {
               </div>
 
               <div>
-                <label htmlFor="stockage" className="block text-xs sm:text-sm font-medium text-gray-700">Stockage (Go)</label>
+                <label htmlFor="stockage" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Stockage (Go)</label>
                 <input
                   type="text"
                   id="stockage"
                   value={stockage}
                   onChange={(e) => setStockage(e.target.value)}
                   list="stockage-list"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                 />
                 <datalist id="stockage-list">
                   {STOCKAGES.map(item => (
@@ -893,13 +823,13 @@ export default function SpecialOrders() {
               </div>
 
               <div>
-                <label htmlFor="type" className="block text-xs sm:text-sm font-medium text-gray-700">Type</label>
+                <label htmlFor="type" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
                 <select
                   id="type"
                   value={type}
                   onChange={(e) => setType(e.target.value)}
                   required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                 >
                   <option value="TELEPHONE">TÉLÉPHONE</option>
                   <option value="ACCESSOIRE">ACCESSOIRE</option>
@@ -910,31 +840,39 @@ export default function SpecialOrders() {
 
               {type === 'CARTON' && (
                 <div>
-                  <label htmlFor="typeCarton" className="block text-xs sm:text-sm font-medium text-gray-700">Type Carton</label>
-                  <input
-                    type="text"
+                  <label htmlFor="typeCarton" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Type Carton</label>
+                  <select
                     id="typeCarton"
                     value={typeCarton}
                     onChange={(e) => setTypeCarton(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-                  />
+                    required
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                  >
+                    <option value="">Choisir la qualité</option>
+                    <option value="ORG">ORG</option>
+                    <option value="GW">GW</option>
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="NO ACTIVE">NO ACTIVE</option>
+                    <option value="ESIM NO ACTIVE">ESIM NO ACTIVE</option>
+                    <option value="ESIM ACTIVE">ESIM ACTIVE</option>
+                  </select>
                 </div>
               )}
 
               <div>
-                <label htmlFor="imei" className="block text-xs sm:text-sm font-medium text-gray-700">IMEI (optional)</label>
+                <label htmlFor="imei" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">IMEI (optional)</label>
                 <input
                   type="text"
                   id="imei"
                   value={imei}
                   onChange={(e) => setImei(e.target.value)}
                   maxLength="6"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                 />
               </div>
 
               <div>
-                <label htmlFor="prixAchatFournisseur" className="block text-xs sm:text-sm font-medium text-gray-700">Prix Achat Fournisseur (CFA)</label>
+                <label htmlFor="prixAchatFournisseur" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Prix Achat Fournisseur (CFA)</label>
                 <input
                   type="text"
                   id="prixAchatFournisseur"
@@ -946,12 +884,12 @@ export default function SpecialOrders() {
                     }
                   }}
                   required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                 />
               </div>
 
               <div>
-                <label htmlFor="prixVenteClient" className="block text-xs sm:text-sm font-medium text-gray-700">Prix Vente Client (CFA)</label>
+                <label htmlFor="prixVenteClient" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Prix Vente Client (CFA)</label>
                 <input
                   type="text"
                   id="prixVenteClient"
@@ -963,13 +901,13 @@ export default function SpecialOrders() {
                     }
                   }}
                   required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                 />
               </div>
 
               {!currentOrder && (
                 <div>
-                  <label htmlFor="initialMontantPaye" className="block text-xs sm:text-sm font-medium text-gray-700">Montant Payé Initial (CFA)</label>
+                  <label htmlFor="initialMontantPaye" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Montant Payé Initial (CFA)</label>
                   <input
                     type="text"
                     id="initialMontantPaye"
@@ -980,7 +918,7 @@ export default function SpecialOrders() {
                         setInitialMontantPaye(formatNumberWithSpaces(value));
                       }
                     }}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   />
                 </div>
               )}
@@ -989,7 +927,7 @@ export default function SpecialOrders() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                  className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                   disabled={isFormSubmitting}
                 >
                   Annuler
@@ -1013,23 +951,23 @@ export default function SpecialOrders() {
 
       {showPaymentModal && currentOrderToEditPayment && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-4 sm:p-6">
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">Modifier Paiement Commande Spéciale</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-4 sm:p-6">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4 text-center">Modifier Paiement Commande Spéciale</h3>
             <form onSubmit={handleConfirmUpdatePayment}>
               <div className="mb-4">
-                <p className="text-sm text-gray-700 mb-2">
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
                   Client: <span className="font-semibold">{currentOrderToEditPayment.client_nom}</span>
                 </p>
-                <p className="text-sm text-gray-700 mb-2">
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
                   Article: <span className="font-semibold">{currentOrderToEditPayment.marque} {currentOrderToEditPayment.modele}</span>
                 </p>
-                <p className="text-sm text-gray-700 mb-2">
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
                   Prix de Vente Total: <span className="font-semibold">{formatCFA(currentOrderToEditPayment.prix_vente_client)}</span>
                 </p>
-                <p className="text-sm text-gray-700 mb-4">
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
                   Montant Actuellement Payé: <span className="font-semibold">{formatCFA(currentOrderToEditPayment.montant_paye)}</span>
                 </p>
-                <label htmlFor="newMontantPaye" className="block text-sm font-medium text-gray-700">Nouveau Montant Payé Total (FCFA)</label>
+                <label htmlFor="newMontantPaye" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nouveau Montant Payé Total (FCFA)</label>
                 <input
                   type="text"
                   id="newMontantPaye"
@@ -1041,19 +979,19 @@ export default function SpecialOrders() {
                     }
                   }}
                   required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                 />
               </div>
 
               {paymentModalError && (
-                <p className="text-red-600 text-sm mb-4">{paymentModalError}</p>
+                <p className="text-red-600 dark:text-red-400 text-sm mb-4">{paymentModalError}</p>
               )}
 
               <div className="flex justify-end space-x-2 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowPaymentModal(false)}
-                  className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                  className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                   disabled={isLoadingPayment}
                 >
                   Annuler
@@ -1077,32 +1015,62 @@ export default function SpecialOrders() {
 
       {showConfirmModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-50 no-print">
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-xl max-w-xs sm:max-w-sm w-full relative z-[60] pointer-events-auto">
-             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">{confirmModalContent.title}</h3>
+          <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl max-w-xs sm:max-w-sm w-full relative z-[60] pointer-events-auto">
+             <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">{confirmModalContent.title}</h3>
             {typeof confirmModalContent.message === 'string' ? (
-              <p className="text-sm text-gray-700 mb-4">{confirmModalContent.message}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">{confirmModalContent.message}</p>
             ) : (
-              <div className="text-sm text-gray-700 mb-4">{confirmModalContent.message}</div>
+              <div className="text-sm text-gray-700 dark:text-gray-300 mb-4">{confirmModalContent.message}</div>
+            )}
+            <div className="mb-4">
+                <label htmlFor="reason-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Raison:
+                </label>
+                <select
+                    id="reason-select"
+                    value={selectedReason}
+                    onChange={handleReasonChange}
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                >
+                    <option value="">Sélectionnez une raison</option>
+                    {confirmModalContent.reasonsList.map((reason, index) => (
+                        <option key={index} value={reason}>{reason}</option>
+                    ))}
+                </select>
+            </div>
+            {confirmModalContent.isOtherReason && (
+                <div className="mb-4">
+                    <label htmlFor="other-reason-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Précisez la raison:
+                    </label>
+                    <textarea
+                        id="other-reason-input"
+                        value={otherReason}
+                        onChange={(e) => setOtherReason(e.target.value)}
+                        rows={2}
+                        className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-gray-100"
+                    />
+                </div>
             )}
             {confirmModalError && (
-              <p className="text-red-500 text-xs mt-1">{confirmModalError}</p>
+              <p className="text-red-500 dark:text-red-400 text-xs mt-1">{confirmModalError}</p>
             )}
             <div className="flex justify-end space-x-2">
               <button
                 onClick={closeConfirmModal}
-                className="px-4 py-2 text-sm bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition"
+                className="px-4 py-2 text-sm bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600 transition"
                 disabled={isConfirming}
               >
                 Annuler
               </button>
               <button
-                onClick={() => onConfirmAction(returnReasonInput)}
+                onClick={handleConfirm}
                 className={`px-4 py-2 text-sm rounded-md transition ${
-                  isConfirming || (confirmModalContent.message && typeof confirmModalContent.message !== 'string' && !returnReasonInput.trim())
+                  isConfirming || (!selectedReason && !otherReason)
                     ? 'bg-red-400 cursor-not-allowed'
                     : 'bg-red-600 text-white hover:bg-red-700'
                 }`}
-                disabled={isConfirming || (confirmModalContent.message && typeof confirmModalContent.message !== 'string' && !returnReasonInput.trim())}
+                disabled={isConfirming || (!selectedReason && !otherReason)}
               >
                 {isConfirming ? (
                   <ArrowPathIcon className="h-5 w-5 animate-spin mx-auto" />

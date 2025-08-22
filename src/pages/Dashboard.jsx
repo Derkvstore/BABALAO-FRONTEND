@@ -1,4 +1,3 @@
-// frontend/src/pages/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -38,31 +37,33 @@ import RemplacementsFournisseur from './RemplacementsFournisseur.jsx';
 import Recherche from './Recherche.jsx';
 import Fournisseurs from './Fournisseurs.jsx';
 import Factures from './Factures.jsx';
-import Benefices from '../pages/Benefices.jsx';
-//import RapportJournalier from './RapportJournalier.jsx';
-import SpecialOrders from '../pages/SpecialOrders.jsx';
-//import FacturesConsolidees from './FacturesConsolidees.jsx';
+import Benefices from './Benefices.jsx';
+// import RapportJournalier from './RapportJournalier.jsx';
+import SpecialOrders from './SpecialOrders.jsx';
+import RapportBeneficesSpeciaux from './RapportBeneficesSpeciaux.jsx';
+import DettesSpeciaux from './DettesSpeciaux.jsx';
+import RechercheSpeciale from './RechercheSpeciale.jsx';
 import logo from '../assets/logo.png';
 
-// J'ai mis à jour ce tableau pour inclure "Accueil"
 const sections = [
   { name: 'Accueil', icon: HomeIcon },
   { name: 'Achat', icon: ClipboardDocumentListIcon },
   { name: 'Clients', icon: UserGroupIcon },
   { name: 'Fournisseurs', icon: TruckIcon },
+  { name: 'Bénéfices Spéciaux', icon: CurrencyDollarIcon },
   { name: 'Produits', icon: CubeIcon },
   { name: 'Vente', icon: PlusCircleIcon },
-  { name: 'Sorties', icon: ClockIcon },
-  //{ name: 'Factures Clts', icon: DocumentTextIcon },
-  { name: 'Factures Gros', icon: ListBulletIcon },
-  { name: 'Recherche', icon: MagnifyingGlassIcon },
-  { name: 'Bénéfices', icon: CurrencyDollarIcon },
-  { name: 'Dettes', icon: Bars3Icon },
-  { name: 'Rapport', icon: ChartBarIcon },
-  //{ name: 'Mouvement', icon: CalendarDaysIcon },
-  { name: 'Retour', icon: ArrowLeftIcon },
-  { name: 'Rtrs Frns', icon: ArrowsRightLeftIcon },
-  
+  //{ name: 'Sorties', icon: ClockIcon }, 
+  //{ name: 'Factures Gros', icon: ListBulletIcon }, 
+  //{ name: 'Recherche', icon: MagnifyingGlassIcon }, 
+  { name: 'Recherche Spéciale', icon: MagnifyingGlassIcon }, 
+  //{ name: 'Bénéfices', icon: CurrencyDollarIcon }, 
+  //{ name: 'Dettes', icon: Bars3Icon }, 
+  { name: 'Dettes Spéciales', icon: Bars3Icon },
+  //{ name: 'Rapport', icon: ChartBarIcon }, 
+  //{ name: 'Rapport Journalier', icon: CalendarDaysIcon }, 
+  //{ name: 'Retour', icon: ArrowLeftIcon }, 
+  //{ name: 'Rtrs Frns', icon: ArrowsRightLeftIcon }, 
 ];
 
 export default function Dashboard() {
@@ -127,12 +128,12 @@ export default function Dashboard() {
           return <Sorties />;
         case 'Recherche':
           return <Recherche />;
-        // case 'Factures Clts':
-        //   return <FacturesConsolidees />;
-            case 'Factures Gros':
+        case 'Factures Gros':
           return <Factures />;
         case 'Bénéfices':
           return <Benefices />;
+        case 'Bénéfices Spéciaux':
+          return <RapportBeneficesSpeciaux />;
         case 'Achat':
           return <SpecialOrders />;
         case 'Retour':
@@ -143,9 +144,13 @@ export default function Dashboard() {
           return <RemplacementsFournisseur />;
         case 'Dettes':
           return <Liste />;
+        case 'Dettes Spéciales':
+          return <DettesSpeciaux />;
         case 'Rapport':
           return <Rapport />;
-        // case 'Mouvement':
+        case 'Recherche Spéciale':
+            return <RechercheSpeciale />;
+        // case 'Rapport Journalier':
         //   return <RapportJournalier />;
         case 'Accueil':
           return <Accueil />;
@@ -174,7 +179,7 @@ export default function Dashboard() {
 
       {/* Menu de navigation (latéral sur desktop, glissant sur mobile) */}
       <nav
-        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-30 transform transition-transform duration-300 dark:bg-gray-800 dark:text-gray-100
+        className={`h-fit sm:h-screen w-64 bg-white shadow-lg z-30 transform transition-transform duration-300 dark:bg-gray-800 dark:text-gray-100
           ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}
           sm:static sm:translate-x-0 sm:flex sm:flex-col sm:p-6`}
       >
@@ -204,7 +209,7 @@ export default function Dashboard() {
 
       <div className="flex-grow flex flex-col overflow-hidden">
         {/* En-tête du tableau de bord */}
-        <header className="flex justify-between items-center bg-white shadow-md p-4 sticky top-0 z-10 dark:bg-gray-800 dark:text-gray-100 transition-colors duration-300">
+        <header className="flex justify-between items-center bg-white shadow-md p-4 dark:bg-gray-800 dark:text-gray-100 transition-colors duration-300">
           <div className="flex items-center">
             <button
               onClick={() => setIsMenuOpen(true)}
@@ -246,7 +251,7 @@ export default function Dashboard() {
         </header>
 
         {/* Contenu principal */}
-        <main className="flex-grow p-4 sm:p-10 overflow-y-auto max-h-screen">
+        <main className="flex-grow p-4 sm:p-10">
           <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-800 dark:text-gray-200 truncate">
             {active}
           </h2>
