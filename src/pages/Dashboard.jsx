@@ -6,12 +6,10 @@ import {
   CubeIcon,
   UserGroupIcon,
   MagnifyingGlassIcon,
-  DocumentTextIcon,
   PlusCircleIcon,
   ClockIcon,
   ArrowLeftIcon,
   Bars3Icon,
-  ChartBarIcon,
   ArrowRightOnRectangleIcon,
   TruckIcon,
   ArrowsRightLeftIcon,
@@ -38,7 +36,6 @@ import Recherche from './Recherche.jsx';
 import Fournisseurs from './Fournisseurs.jsx';
 import Factures from './Factures.jsx';
 import Benefices from './Benefices.jsx';
-// import RapportJournalier from './RapportJournalier.jsx';
 import SpecialOrders from './SpecialOrders.jsx';
 import RapportBeneficesSpeciaux from './RapportBeneficesSpeciaux.jsx';
 import DettesSpeciaux from './dettesSpeciaux.jsx';
@@ -51,19 +48,10 @@ const sections = [
   { name: 'Clients', icon: UserGroupIcon },
   { name: 'Fournisseurs', icon: TruckIcon },
   { name: 'Bénéfices Spéciaux', icon: CurrencyDollarIcon },
-  // { name: 'Produits', icon: CubeIcon },
-  // { name: 'Vente', icon: PlusCircleIcon },
-  //{ name: 'Sorties', icon: ClockIcon }, 
-  //{ name: 'Factures Gros', icon: ListBulletIcon }, 
-  //{ name: 'Recherche', icon: MagnifyingGlassIcon }, 
-  { name: 'Recherche Spéciale', icon: MagnifyingGlassIcon }, 
-  //{ name: 'Bénéfices', icon: CurrencyDollarIcon }, 
-  //{ name: 'Dettes', icon: Bars3Icon }, 
+  { name: 'Produits', icon: CubeIcon },
+  { name: 'Vente', icon: PlusCircleIcon },
+  { name: 'Recherche Spéciale', icon: MagnifyingGlassIcon },
   { name: 'Dettes Spéciales', icon: Bars3Icon },
-  //{ name: 'Rapport', icon: ChartBarIcon }, 
-  //{ name: 'Rapport Journalier', icon: CalendarDaysIcon }, 
-  //{ name: 'Retour', icon: ArrowLeftIcon }, 
-  //{ name: 'Rtrs Frns', icon: ArrowsRightLeftIcon }, 
 ];
 
 export default function Dashboard() {
@@ -151,8 +139,6 @@ export default function Dashboard() {
           return <Rapport />;
         case 'Recherche Spéciale':
             return <RechercheSpeciale />;
-        // case 'Rapport Journalier':
-        //   return <RapportJournalier />;
         case 'Accueil':
           return <Accueil />;
         default:
@@ -180,7 +166,7 @@ export default function Dashboard() {
 
       {/* Menu de navigation (latéral sur desktop, glissant sur mobile) */}
       <nav
-        className={`h-fit sm:h-screen w-64 bg-white shadow-lg z-30 transform transition-transform duration-300 dark:bg-gray-800 dark:text-gray-100
+        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-30 transform transition-transform duration-300 dark:bg-gray-800 dark:text-gray-100
           ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}
           sm:static sm:translate-x-0 sm:flex sm:flex-col sm:p-6`}
       >
@@ -210,7 +196,7 @@ export default function Dashboard() {
 
       <div className="flex-grow flex flex-col overflow-hidden">
         {/* En-tête du tableau de bord */}
-        <header className="flex justify-between items-center bg-white shadow-md p-4 dark:bg-gray-800 dark:text-gray-100 transition-colors duration-300">
+        <header className="flex justify-between items-center bg-white shadow-md p-4 sticky top-0 z-10 dark:bg-gray-800 dark:text-gray-100 transition-colors duration-300">
           <div className="flex items-center">
             <button
               onClick={() => setIsMenuOpen(true)}
