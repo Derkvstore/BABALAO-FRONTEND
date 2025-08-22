@@ -48,8 +48,6 @@ const sections = [
   { name: 'Clients', icon: UserGroupIcon },
   { name: 'Fournisseurs', icon: TruckIcon },
   { name: 'Bénéfices Spéciaux', icon: CurrencyDollarIcon },
-  { name: 'Produits', icon: CubeIcon },
-  { name: 'Vente', icon: PlusCircleIcon },
   { name: 'Recherche Spéciale', icon: MagnifyingGlassIcon },
   { name: 'Dettes Spéciales', icon: Bars3Icon },
 ];
