@@ -5,3 +5,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Styles globaux */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto; /* active le défilement naturel */
+  font-family: 'Inter', sans-serif;
+  background-color: theme('colors.blue.50'); /* couleur claire par défaut */
+}
+
+@media (prefers-color-scheme: dark) {
+  html, body, #root {
+    background-color: theme('colors.gray.900'); /* couleur en mode sombre */
+  }
+}
+
+/* Impression (optionnel) */
+@media print {
+  body * { visibility: hidden; }
+  .printable-section, .printable-section * { visibility: visible; }
+  .printable-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}
