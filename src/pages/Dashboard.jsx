@@ -105,8 +105,9 @@ export default function Dashboard() {
   };
 
   const toggleDarkMode = () => {
-    setIsDarkMode(prevMode => !prevMode);
-    localStorage.setItem('theme', isDarkMode ? 'light' : 'dark');
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem('theme', newMode ? 'dark' : 'light');
   };
 
   const handleSectionClick = (name) => {
