@@ -41,7 +41,7 @@ import Benefices from './Benefices.jsx';
 // import RapportJournalier from './RapportJournalier.jsx';
 import SpecialOrders from './SpecialOrders.jsx';
 import RapportBeneficesSpeciaux from './RapportBeneficesSpeciaux.jsx';
-import DettesSpeciaux from './DettesSpeciaux.jsx';
+import DettesSpeciaux from './dettesSpeciaux.jsx';
 import RechercheSpeciale from './RechercheSpeciale.jsx';
 import logo from '../assets/logo.png';
 
