@@ -119,7 +119,8 @@ export default function RapportBeneficesSpeciaux() {
     <div className="p-2 sm:p-4 md:p-6 bg-gray-50 min-h-screen font-sans dark:bg-gray-900 dark:text-gray-100">
       <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200 mb-6 text-center">Rapport des Bénéfices sur Commandes Spéciales</h2>
       
-      <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 mb-6">
+      {/* Mise en page réactive pour la recherche et les filtres de date */}
+      <div className="flex flex-col md:flex-row items-center md:justify-center space-y-4 md:space-y-0 md:space-x-4 mb-6">
         <div className="relative w-full md:w-1/2">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />
@@ -132,8 +133,8 @@ export default function RapportBeneficesSpeciaux() {
             className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
           />
         </div>
-        <div className="flex space-x-2 w-full md:w-auto">
-          <div className="relative w-1/2">
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full md:w-auto">
+          <div className="relative w-full sm:w-1/2">
             <input
               type="date"
               value={startDate}
@@ -143,7 +144,7 @@ export default function RapportBeneficesSpeciaux() {
             />
             <CalendarDaysIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           </div>
-          <div className="relative w-1/2">
+          <div className="relative w-full sm:w-1/2">
             <input
               type="date"
               value={endDate}
